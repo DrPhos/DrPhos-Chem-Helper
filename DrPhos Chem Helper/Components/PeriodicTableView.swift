@@ -126,11 +126,11 @@ struct PolyatomicIonView: View {
     
     var body: some View {
         VStack {
-            LazyVGrid(columns: Array(repeating: GridItem(.fixed(buttonWidth), spacing: 1), count: numberOfColumns), spacing: 0) {
+            LazyVGrid(columns: Array(repeating: GridItem(.fixed(buttonWidth), spacing: 1), count: numberOfColumns), spacing: 4) {
                 ForEach(0..<numberOfRows, id: \.self) { row in
                     ForEach(0..<numberOfColumns, id: \.self) { column in
                         if row == 1 && hiddenButtonsInSecondRow.contains(column) {
-                            Color.clear.frame(width: buttonWidth, height: 44)
+                            Color.clear.frame(width: buttonWidth, height: 35)
                         } else {
                             let buttonLabel = buttonLabels[row][column]
                             Button(action: { handleButtonTap(buttonLabel) }) {
@@ -151,7 +151,7 @@ struct PolyatomicIonView: View {
                                 } else {
                                     Text(buttonLabel)
                                         .lineLimit(1)
-                                        .frame(width: buttonWidth, height: 44)
+                                        .frame(width: buttonWidth, height: 35)
                                         .background(Color.five)
                                         .foregroundColor(.white)
                                         .cornerRadius(10)
@@ -229,7 +229,7 @@ private struct PolyatomicIonButtonContent: View {
         }
         .lineLimit(1)
         .fixedSize(horizontal: true, vertical: false)
-        .frame(width: 45, height: 44, alignment: .center)
+        .frame(width: 45, height: 35, alignment: .center)
         .foregroundColor(.white)
         .background(Color.five)
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))

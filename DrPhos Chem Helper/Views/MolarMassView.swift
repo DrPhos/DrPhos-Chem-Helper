@@ -143,10 +143,12 @@ struct MolarMassView: View {
                                 .rotationEffect(.degrees(isCollapsed ? 0 : 180))
                                 .foregroundColor(.numbers)
                             Text("Elemental Analysis")
-                                .font(.subheadline)
+                                .font(.caption)
+                                .lineLimit(1)
+                                .fixedSize(horizontal: true, vertical: false)
                                 .foregroundColor(.numbers)
                             decimalAdjustmentButtons
-                                .padding(.leading, 40)
+                                .padding(.leading, 12)
                         }
                         
                         VStack {
@@ -167,7 +169,7 @@ struct MolarMassView: View {
     }
     
     private var decimalAdjustmentButtons: some View {
-        HStack {
+        HStack(spacing: 4) {
             Button(action: incrementDecimalPlaces) {
                 Image(systemName: "plus.circle")
                     .foregroundColor(Color.numbers)
@@ -175,7 +177,9 @@ struct MolarMassView: View {
             .buttonStyle(PlainButtonStyle())
             Text("Decimals")
                 .foregroundColor(Color.numbers)
-                .font(.caption)
+                .font(.caption2)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
             Button(action: decrementDecimalPlaces) {
                 Image(systemName: "minus.circle")
                     .foregroundColor(Color.numbers)
