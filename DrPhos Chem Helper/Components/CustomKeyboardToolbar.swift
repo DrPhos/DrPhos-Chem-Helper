@@ -30,7 +30,7 @@ struct CustomKeyboardToolbar: View {
             
             Button {
                 if let activeField = activeField {
-                    activeField.wrappedValue += "-"
+                    activeField.wrappedValue = NumericInputEditor.togglingSign(of: activeField.wrappedValue)
                 }
             } label: {
                 Text("(—)")
@@ -46,6 +46,15 @@ struct CustomKeyboardToolbar: View {
                     .imageScale(.medium)
             }
      
+    }
+}
+
+enum NumericInputEditor {
+    static func togglingSign(of value: String) -> String {
+        if value.hasPrefix("-") {
+            return String(value.dropFirst())
+        }
+        return "-" + value
     }
 }
 

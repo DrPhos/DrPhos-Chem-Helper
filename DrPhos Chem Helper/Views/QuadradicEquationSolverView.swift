@@ -49,10 +49,8 @@ struct QuadradicEquationSolverView: View {
                     CustomKeyboardToolbar(activeField: $activeField)
                 }
             }
-            .onTapGesture {
-                UIApplication.shared.endEditing()
-                focusedField = nil
-                activeField = nil
+            .onChange(of: focusedField) { _, field in
+                activeField = binding(for: field)
             }
         }
     }
@@ -77,7 +75,15 @@ struct QuadradicEquationSolverView: View {
             focus: $focusedField,
             focusValue: field
         )
-        .onTapGesture { activeField = text }
+    }
+
+    private func binding(for field: Field?) -> Binding<String>? {
+        switch field {
+        case .a: $a
+        case .b: $b
+        case .c: $c
+        case .none: nil
+        }
     }
 
     private func solve() {

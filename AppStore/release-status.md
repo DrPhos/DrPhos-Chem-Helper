@@ -16,8 +16,8 @@ Prepared June 30, 2026.
 
 ## Local release artifacts
 
-- Archive: `/private/tmp/DrPhos-Chemistry-Pro-4.0-1.xcarchive`
-- App Store export: `/private/tmp/DrPhos-Chemistry-Pro-4.0-1-export`
+- Archive: `/private/tmp/DrPhos-Chemistry-Pro-4.0-1-quadratic-fix.xcarchive`
+- App Store export: `/private/tmp/DrPhos-Chemistry-Pro-4.0-1-quadratic-fix-export`
 
 These temporary artifacts can be recreated from the committed project and should not be treated as permanent backups.
 

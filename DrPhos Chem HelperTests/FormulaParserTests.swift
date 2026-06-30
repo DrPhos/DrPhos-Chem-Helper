@@ -150,6 +150,20 @@ final class ScientificCalculatorInputTests: XCTestCase {
     }
 }
 
+final class NumericInputEditorTests: XCTestCase {
+    func testSignCanBeAddedBeforeEnteringDigits() {
+        XCTAssertEqual(NumericInputEditor.togglingSign(of: ""), "-")
+    }
+
+    func testSignIsPrependedToExistingNumber() {
+        XCTAssertEqual(NumericInputEditor.togglingSign(of: "2.5"), "-2.5")
+    }
+
+    func testSignCanBeRemoved() {
+        XCTAssertEqual(NumericInputEditor.togglingSign(of: "-2.5"), "2.5")
+    }
+}
+
 final class ToolAccessTests: XCTestCase {
     func testIncludedToolIsUnlocked() {
         let access = ToolAccess(includedTools: [.ph])

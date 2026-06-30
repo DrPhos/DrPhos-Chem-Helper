@@ -63,6 +63,8 @@ struct NumbersSecondRowView: View {
     func handleButtonTap(_ label: String) {
         if label == "x10^" {
             compoundFormula += "e"
+        } else if label == "-" {
+            compoundFormula = NumericInputEditor.togglingSign(of: compoundFormula)
         } else {
             compoundFormula += label
         }
@@ -73,7 +75,7 @@ struct NumbersSecondRowView: View {
             ForEach([".", "-", "x10^"], id: \.self) { label in
                 Button(action: { handleButtonTap(label) }) {
                     Text(label)
-                        .frame(width: buttonWidth, height: 30)
+                        .frame(width: buttonWidth, height: 44)
                         .background(Color.numbers)
                         .foregroundColor(.numberstext)
                         .cornerRadius(10)
