@@ -106,7 +106,7 @@ struct PeriodicTableView: View {
 struct PolyatomicIonView: View {
     let numberOfRows = 2
     let numberOfColumns = 6
-    let buttonWidth: CGFloat = 56
+    let buttonWidth: CGFloat = 45
     let hiddenButtonsInSecondRow = [1, 2, 3]
     
     let buttonLabels: [[String]] = [
@@ -215,21 +215,21 @@ private struct PolyatomicIonButtonContent: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 0) {
             Text(base)
-                .font(.subheadline.weight(.medium))
+                .font(.caption)
 
             if let subscriptText {
                 Text(subscriptText)
-                    .font(.caption2)
-                    .baselineOffset(-4)
+                    .font(.system(size: 8, weight: .regular))
+                    .baselineOffset(-3)
             }
 
             Text(charge)
-                .font(.caption2)
-                .baselineOffset(7)
+                .font(.system(size: 8, weight: .regular))
+                .baselineOffset(6)
         }
         .lineLimit(1)
         .fixedSize(horizontal: true, vertical: false)
-        .frame(width: 56, height: 44)
+        .frame(width: 45, height: 44, alignment: .center)
         .foregroundColor(.white)
         .background(Color.five)
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))

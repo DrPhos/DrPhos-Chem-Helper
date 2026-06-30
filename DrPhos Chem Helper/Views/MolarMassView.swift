@@ -143,7 +143,7 @@ struct MolarMassView: View {
                                 .rotationEffect(.degrees(isCollapsed ? 0 : 180))
                                 .foregroundColor(.numbers)
                             Text("Elemental Analysis")
-                                .font(.title3)
+                                .font(.subheadline)
                                 .foregroundColor(.numbers)
                             decimalAdjustmentButtons
                                 .padding(.leading, 40)
@@ -175,7 +175,7 @@ struct MolarMassView: View {
             .buttonStyle(PlainButtonStyle())
             Text("Decimals")
                 .foregroundColor(Color.numbers)
-                .font(.footnote)
+                .font(.caption)
             Button(action: decrementDecimalPlaces) {
                 Image(systemName: "minus.circle")
                     .foregroundColor(Color.numbers)
