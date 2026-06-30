@@ -106,7 +106,7 @@ struct PeriodicTableView: View {
 struct PolyatomicIonView: View {
     let numberOfRows = 2
     let numberOfColumns = 6
-    let buttonWidth: CGFloat = 45
+    let buttonWidth: CGFloat = 56
     let hiddenButtonsInSecondRow = [1, 2, 3]
     
     let buttonLabels: [[String]] = [
@@ -130,7 +130,7 @@ struct PolyatomicIonView: View {
                 ForEach(0..<numberOfRows, id: \.self) { row in
                     ForEach(0..<numberOfColumns, id: \.self) { column in
                         if row == 1 && hiddenButtonsInSecondRow.contains(column) {
-                            Color.clear.frame(width: buttonWidth, height: 40)
+                            Color.clear.frame(width: buttonWidth, height: 44)
                         } else {
                             let buttonLabel = buttonLabels[row][column]
                             Button(action: { handleButtonTap(buttonLabel) }) {
@@ -150,14 +150,13 @@ struct PolyatomicIonView: View {
                                     CNButton()
                                 } else {
                                     Text(buttonLabel)
-                                        .frame(width: buttonWidth, height: 35)
+                                        .lineLimit(1)
+                                        .frame(width: buttonWidth, height: 44)
                                         .background(Color.five)
                                         .foregroundColor(.white)
                                         .cornerRadius(10)
-                                        .padding(.trailing, -7)
                                 }
                             }
-                            .padding(.top, -3.5)
                         }
                     }
                 }
@@ -168,167 +167,80 @@ struct PolyatomicIonView: View {
 
 struct NH4Button: View {
     var body: some View {
-        HStack(spacing: -8) {
-            Text("NH")
-                .font(.subheadline)
-                .padding(.leading, -7)
-                .foregroundColor(.white)
-                .frame(width: 45, height: 44)
-                .background(Color.five)
-                .cornerRadius(10)
-            VStack {
-                Text("+")
-                    .font(.caption)
-                    .foregroundColor(.white)
-                    .padding(.bottom, -6)
-                Text("4")
-                    .font(.caption)
-                    .foregroundColor(.white)
-                    .padding(.bottom, 2)
-            }
-            .padding(.leading, -8)
-        }
+        PolyatomicIonButtonContent(base: "NH", subscriptText: "4", charge: "+")
     }
 }
 
 struct OHButton: View {
     var body: some View {
-        HStack(spacing: -8) {
-            Text("OH")
-                .font(.subheadline)
-                .padding(.leading, -3)
-                .foregroundColor(.white)
-                .frame(width: 45, height: 44)
-                .background(Color.five)
-                .cornerRadius(10)
-            Text("-")
-                .font(.caption)
-                .foregroundColor(.white)
-                .padding(.leading, -5)
-                .padding(.bottom, 15)
-        }
+        PolyatomicIonButtonContent(base: "OH", charge: "−")
     }
 }
 
 struct NO3Button: View {
     var body: some View {
-        HStack(spacing: -8) {
-            Text("NO")
-                .font(.subheadline)
-                .padding(.leading, -7)
-                .foregroundColor(.white)
-                .frame(width: 45, height: 44)
-                .background(Color.five)
-                .cornerRadius(10)
-            VStack {
-                Text("-")
-                    .font(.caption)
-                    .foregroundColor(.white)
-                    .padding(.bottom, -6)
-                Text("3")
-                    .font(.caption)
-                    .foregroundColor(.white)
-                    .padding(.bottom, 2)
-            }
-            .padding(.leading, -7)
-        }
+        PolyatomicIonButtonContent(base: "NO", subscriptText: "3", charge: "−")
     }
 }
 
 struct SO4Button: View {
     var body: some View {
-        HStack(spacing: -8) {
-            Text("SO")
-                .font(.subheadline)
-                .padding(.leading, -7)
-                .foregroundColor(.white)
-                .frame(width: 45, height: 44)
-                .background(Color.five)
-                .cornerRadius(10)
-            VStack {
-                Text("-2")
-                    .font(.caption2)
-                    .foregroundColor(.white)
-                    .padding(.bottom, -6)
-                Text("4")
-                    .font(.caption)
-                    .foregroundColor(.white)
-                    .padding(.bottom, 2)
-                    .padding(.leading, -2)
-            }
-            .padding(.leading, -10)
-        }
+        PolyatomicIonButtonContent(base: "SO", subscriptText: "4", charge: "2−")
     }
 }
 
 struct CO3Button: View {
     var body: some View {
-        HStack(spacing: -8) {
-            Text("CO")
-                .font(.subheadline)
-                .padding(.leading, -7)
-                .foregroundColor(.white)
-                .frame(width: 45, height: 44)
-                .background(Color.five)
-                .cornerRadius(10)
-            VStack {
-                Text("-2")
-                    .font(.caption2)
-                    .foregroundColor(.white)
-                    .padding(.bottom, -6)
-                Text("3")
-                    .font(.caption)
-                    .foregroundColor(.white)
-                    .padding(.bottom, 2)
-                    .padding(.leading, -1)
-            }
-            .padding(.leading, -9)
-        }
+        PolyatomicIonButtonContent(base: "CO", subscriptText: "3", charge: "2−")
     }
 }
 
 struct PO4Button: View {
     var body: some View {
-        HStack(spacing: -8) {
-            Text("PO")
-                .font(.subheadline)
-                .padding(.leading, -7)
-                .foregroundColor(.white)
-                .frame(width: 45, height: 44)
-                .background(Color.five)
-                .cornerRadius(10)
-            VStack {
-                Text("-3")
-                    .font(.caption2)
-                    .foregroundColor(.white)
-                    .padding(.bottom, -6)
-                Text("4")
-                    .font(.caption)
-                    .foregroundColor(.white)
-                    .padding(.bottom, 2)
-                    .padding(.leading, -3)
-            }
-            .padding(.leading, -9)
-        }
+        PolyatomicIonButtonContent(base: "PO", subscriptText: "4", charge: "3−")
     }
 }
 
 struct CNButton: View {
     var body: some View {
-        HStack(spacing: -8) {
-            Text("CN")
-                .font(.subheadline)
-                .padding(.leading, -3)
-                .foregroundColor(.white)
-                .frame(width: 45, height: 44)
-                .background(Color.five)
-                .cornerRadius(10)
-            Text("-")
-                .font(.caption)
-                .foregroundColor(.white)
-                .padding(.leading, -5)
-                .padding(.bottom, 15)
+        PolyatomicIonButtonContent(base: "CN", charge: "−")
+    }
+}
+
+private struct PolyatomicIonButtonContent: View {
+    let base: String
+    var subscriptText: String? = nil
+    let charge: String
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 0) {
+            Text(base)
+                .font(.subheadline.weight(.medium))
+
+            if let subscriptText {
+                Text(subscriptText)
+                    .font(.caption2)
+                    .baselineOffset(-4)
+            }
+
+            Text(charge)
+                .font(.caption2)
+                .baselineOffset(7)
         }
+        .lineLimit(1)
+        .fixedSize(horizontal: true, vertical: false)
+        .frame(width: 56, height: 44)
+        .foregroundColor(.white)
+        .background(Color.five)
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityName)
+    }
+
+    private var accessibilityName: String {
+        [base, subscriptText, charge]
+            .compactMap { $0 }
+            .joined()
     }
 }
 
