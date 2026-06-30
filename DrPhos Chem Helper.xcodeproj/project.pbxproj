@@ -12,29 +12,47 @@
 		6B0448A42E368ACB00DFF4DF /* DrPhosTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B0448A02E368ACB00DFF4DF /* DrPhosTextField.swift */; };
 		6B0448A52E368ACB00DFF4DF /* DrPhosButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B04489D2E368ACB00DFF4DF /* DrPhosButton.swift */; };
 		6B0448A62E368ACB00DFF4DF /* DrPhosResultBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B04489E2E368ACB00DFF4DF /* DrPhosResultBox.swift */; };
+		A10000312F00000100000001 /* DrPhosCalculatorComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000322F00000100000001 /* DrPhosCalculatorComponents.swift */; };
 		6B0448B02E368AE800DFF4DF /* NumbersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B0448AB2E368AE800DFF4DF /* NumbersView.swift */; };
 		6B0448B12E368AE800DFF4DF /* PeriodicTableData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B0448AC2E368AE800DFF4DF /* PeriodicTableData.swift */; };
 		6B0448B22E368AE800DFF4DF /* ScientificNotationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B0448AE2E368AE800DFF4DF /* ScientificNotationView.swift */; };
 		6B0448B32E368AE800DFF4DF /* CustomKeyboardToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B0448A92E368AE800DFF4DF /* CustomKeyboardToolbar.swift */; };
 		6B0448B42E368AE800DFF4DF /* FormulaParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B0448AA2E368AE800DFF4DF /* FormulaParser.swift */; };
+		A10000112F00000100000001 /* ChemistryCalculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000122F00000100000001 /* ChemistryCalculations.swift */; };
+		A10000212F00000100000001 /* ToolAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000222F00000100000001 /* ToolAccess.swift */; };
 		6B0448B52E368AE800DFF4DF /* CompoundEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B0448A82E368AE800DFF4DF /* CompoundEntry.swift */; };
 		6B0448B62E368AE800DFF4DF /* Compound.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B0448A72E368AE800DFF4DF /* Compound.swift */; };
 		6B0448B72E368AE800DFF4DF /* PeriodicTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B0448AD2E368AE800DFF4DF /* PeriodicTableView.swift */; };
 		6B0448C42E368AFD00DFF4DF /* pHCalculatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B0448BD2E368AFD00DFF4DF /* pHCalculatorView.swift */; };
+		A10000512F00000100000001 /* pHReferenceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000522F00000100000001 /* pHReferenceView.swift */; };
 		6B0448C52E368AFD00DFF4DF /* SigFigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B0448C02E368AFD00DFF4DF /* SigFigView.swift */; };
 		6B0448C62E368AFD00DFF4DF /* IonicCompoundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B0448BA2E368AFD00DFF4DF /* IonicCompoundView.swift */; };
 		6B0448C72E368AFD00DFF4DF /* StoichiometryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B0448C22E368AFD00DFF4DF /* StoichiometryView.swift */; };
 		6B0448C82E368AFD00DFF4DF /* MolarMassView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B0448BC2E368AFD00DFF4DF /* MolarMassView.swift */; };
 		6B0448C92E368AFD00DFF4DF /* SciCalculatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B0448BF2E368AFD00DFF4DF /* SciCalculatorView.swift */; };
 		6B0448CA2E368AFD00DFF4DF /* SolutionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B0448C12E368AFD00DFF4DF /* SolutionsView.swift */; };
+		A10000612F00000100000001 /* SolutionsReferenceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000622F00000100000001 /* SolutionsReferenceView.swift */; };
 		6B0448CB2E368AFD00DFF4DF /* GenChemNamingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B0448B92E368AFD00DFF4DF /* GenChemNamingView.swift */; };
 		6B0448CC2E368AFD00DFF4DF /* KineticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B0448BB2E368AFD00DFF4DF /* KineticsView.swift */; };
+		A10000412F00000100000001 /* KineticsReferenceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000422F00000100000001 /* KineticsReferenceView.swift */; };
 		6B0448CD2E368AFD00DFF4DF /* QuadradicEquationSolverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B0448BE2E368AFD00DFF4DF /* QuadradicEquationSolverView.swift */; };
 		6B0448CE2E368AFD00DFF4DF /* BalancerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B0448B82E368AFD00DFF4DF /* BalancerView.swift */; };
 		6B57C8D32B619FAF0047DF0F /* DrPhos_Chem_HelperApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B57C8D22B619FAF0047DF0F /* DrPhos_Chem_HelperApp.swift */; };
 		6B57C8D52B619FAF0047DF0F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B57C8D42B619FAF0047DF0F /* ContentView.swift */; };
 		6B57C8D72B619FB00047DF0F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6B57C8D62B619FB00047DF0F /* Assets.xcassets */; };
+		A10000712F00000100000001 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A10000722F00000100000001 /* PrivacyInfo.xcprivacy */; };
+		A10000012F00000100000001 /* FormulaParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000022F00000100000001 /* FormulaParserTests.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		A10000032F00000100000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6B57C8C72B619FAF0047DF0F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6B57C8CE2B619FAF0047DF0F;
+			remoteInfo = "DrPhos Chem Helper";
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		6B04489C2E368ACB00DFF4DF /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
@@ -42,10 +60,13 @@
 		6B04489E2E368ACB00DFF4DF /* DrPhosResultBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrPhosResultBox.swift; sourceTree = "<group>"; };
 		6B04489F2E368ACB00DFF4DF /* DrPhosSectionHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrPhosSectionHeader.swift; sourceTree = "<group>"; };
 		6B0448A02E368ACB00DFF4DF /* DrPhosTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrPhosTextField.swift; sourceTree = "<group>"; };
+		A10000322F00000100000001 /* DrPhosCalculatorComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrPhosCalculatorComponents.swift; sourceTree = "<group>"; };
 		6B0448A72E368AE800DFF4DF /* Compound.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Compound.swift; sourceTree = "<group>"; };
 		6B0448A82E368AE800DFF4DF /* CompoundEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompoundEntry.swift; sourceTree = "<group>"; };
 		6B0448A92E368AE800DFF4DF /* CustomKeyboardToolbar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomKeyboardToolbar.swift; sourceTree = "<group>"; };
 		6B0448AA2E368AE800DFF4DF /* FormulaParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormulaParser.swift; sourceTree = "<group>"; };
+		A10000122F00000100000001 /* ChemistryCalculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChemistryCalculations.swift; sourceTree = "<group>"; };
+		A10000222F00000100000001 /* ToolAccess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolAccess.swift; sourceTree = "<group>"; };
 		6B0448AB2E368AE800DFF4DF /* NumbersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumbersView.swift; sourceTree = "<group>"; };
 		6B0448AC2E368AE800DFF4DF /* PeriodicTableData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeriodicTableData.swift; sourceTree = "<group>"; };
 		6B0448AD2E368AE800DFF4DF /* PeriodicTableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeriodicTableView.swift; sourceTree = "<group>"; };
@@ -54,21 +75,34 @@
 		6B0448B92E368AFD00DFF4DF /* GenChemNamingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenChemNamingView.swift; sourceTree = "<group>"; };
 		6B0448BA2E368AFD00DFF4DF /* IonicCompoundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IonicCompoundView.swift; sourceTree = "<group>"; };
 		6B0448BB2E368AFD00DFF4DF /* KineticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KineticsView.swift; sourceTree = "<group>"; };
+		A10000422F00000100000001 /* KineticsReferenceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KineticsReferenceView.swift; sourceTree = "<group>"; };
 		6B0448BC2E368AFD00DFF4DF /* MolarMassView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MolarMassView.swift; sourceTree = "<group>"; };
 		6B0448BD2E368AFD00DFF4DF /* pHCalculatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = pHCalculatorView.swift; sourceTree = "<group>"; };
+		A10000522F00000100000001 /* pHReferenceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = pHReferenceView.swift; sourceTree = "<group>"; };
 		6B0448BE2E368AFD00DFF4DF /* QuadradicEquationSolverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuadradicEquationSolverView.swift; sourceTree = "<group>"; };
 		6B0448BF2E368AFD00DFF4DF /* SciCalculatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SciCalculatorView.swift; sourceTree = "<group>"; };
 		6B0448C02E368AFD00DFF4DF /* SigFigView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SigFigView.swift; sourceTree = "<group>"; };
 		6B0448C12E368AFD00DFF4DF /* SolutionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolutionsView.swift; sourceTree = "<group>"; };
+		A10000622F00000100000001 /* SolutionsReferenceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolutionsReferenceView.swift; sourceTree = "<group>"; };
 		6B0448C22E368AFD00DFF4DF /* StoichiometryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoichiometryView.swift; sourceTree = "<group>"; };
 		6B57C8CF2B619FAF0047DF0F /* DrPhos Chem Helper.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "DrPhos Chem Helper.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		6B57C8D22B619FAF0047DF0F /* DrPhos_Chem_HelperApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrPhos_Chem_HelperApp.swift; sourceTree = "<group>"; };
 		6B57C8D42B619FAF0047DF0F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		6B57C8D62B619FB00047DF0F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A10000722F00000100000001 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		A10000022F00000100000001 /* FormulaParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormulaParserTests.swift; sourceTree = "<group>"; };
+		A10000042F00000100000001 /* DrPhos Chem HelperTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "DrPhos Chem HelperTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		6B57C8CC2B619FAF0047DF0F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A10000052F00000100000001 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -81,6 +115,7 @@
 		6B0448A12E368ACB00DFF4DF /* App Theme */ = {
 			isa = PBXGroup;
 			children = (
+				A10000322F00000100000001 /* DrPhosCalculatorComponents.swift */,
 				6B04489C2E368ACB00DFF4DF /* AppTheme.swift */,
 				6B04489D2E368ACB00DFF4DF /* DrPhosButton.swift */,
 				6B04489E2E368ACB00DFF4DF /* DrPhosResultBox.swift */,
@@ -93,6 +128,8 @@
 		6B0448AF2E368AE800DFF4DF /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				A10000122F00000100000001 /* ChemistryCalculations.swift */,
+				A10000222F00000100000001 /* ToolAccess.swift */,
 				6B0448A72E368AE800DFF4DF /* Compound.swift */,
 				6B0448A82E368AE800DFF4DF /* CompoundEntry.swift */,
 				6B0448A92E368AE800DFF4DF /* CustomKeyboardToolbar.swift */,
@@ -112,12 +149,15 @@
 				6B0448B92E368AFD00DFF4DF /* GenChemNamingView.swift */,
 				6B0448BA2E368AFD00DFF4DF /* IonicCompoundView.swift */,
 				6B0448BB2E368AFD00DFF4DF /* KineticsView.swift */,
+				A10000422F00000100000001 /* KineticsReferenceView.swift */,
 				6B0448BC2E368AFD00DFF4DF /* MolarMassView.swift */,
 				6B0448BD2E368AFD00DFF4DF /* pHCalculatorView.swift */,
+				A10000522F00000100000001 /* pHReferenceView.swift */,
 				6B0448BE2E368AFD00DFF4DF /* QuadradicEquationSolverView.swift */,
 				6B0448BF2E368AFD00DFF4DF /* SciCalculatorView.swift */,
 				6B0448C02E368AFD00DFF4DF /* SigFigView.swift */,
 				6B0448C12E368AFD00DFF4DF /* SolutionsView.swift */,
+				A10000622F00000100000001 /* SolutionsReferenceView.swift */,
 				6B0448C22E368AFD00DFF4DF /* StoichiometryView.swift */,
 			);
 			path = Views;
@@ -127,6 +167,7 @@
 			isa = PBXGroup;
 			children = (
 				6B57C8D12B619FAF0047DF0F /* DrPhos Chem Helper */,
+				A10000062F00000100000001 /* DrPhos Chem HelperTests */,
 				6B57C8D02B619FAF0047DF0F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -135,6 +176,7 @@
 			isa = PBXGroup;
 			children = (
 				6B57C8CF2B619FAF0047DF0F /* DrPhos Chem Helper.app */,
+				A10000042F00000100000001 /* DrPhos Chem HelperTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -148,8 +190,17 @@
 				6B57C8D22B619FAF0047DF0F /* DrPhos_Chem_HelperApp.swift */,
 				6B57C8D42B619FAF0047DF0F /* ContentView.swift */,
 				6B57C8D62B619FB00047DF0F /* Assets.xcassets */,
+				A10000722F00000100000001 /* PrivacyInfo.xcprivacy */,
 			);
 			path = "DrPhos Chem Helper";
+			sourceTree = "<group>";
+		};
+		A10000062F00000100000001 /* DrPhos Chem HelperTests */ = {
+			isa = PBXGroup;
+			children = (
+				A10000022F00000100000001 /* FormulaParserTests.swift */,
+			);
+			path = "DrPhos Chem HelperTests";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -172,6 +223,24 @@
 			productReference = 6B57C8CF2B619FAF0047DF0F /* DrPhos Chem Helper.app */;
 			productType = "com.apple.product-type.application";
 		};
+		A10000072F00000100000001 /* DrPhos Chem HelperTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A10000082F00000100000001 /* Build configuration list for PBXNativeTarget "DrPhos Chem HelperTests" */;
+			buildPhases = (
+				A10000092F00000100000001 /* Sources */,
+				A10000052F00000100000001 /* Frameworks */,
+				A100000A2F00000100000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A100000B2F00000100000001 /* PBXTargetDependency */,
+			);
+			name = "DrPhos Chem HelperTests";
+			productName = "DrPhos Chem HelperTests";
+			productReference = A10000042F00000100000001 /* DrPhos Chem HelperTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -184,6 +253,10 @@
 				TargetAttributes = {
 					6B57C8CE2B619FAF0047DF0F = {
 						CreatedOnToolsVersion = 15.2;
+					};
+					A10000072F00000100000001 = {
+						CreatedOnToolsVersion = 26.0;
+						TestTargetID = 6B57C8CE2B619FAF0047DF0F;
 					};
 				};
 			};
@@ -201,6 +274,7 @@
 			projectRoot = "";
 			targets = (
 				6B57C8CE2B619FAF0047DF0F /* DrPhos Chem Helper */,
+				A10000072F00000100000001 /* DrPhos Chem HelperTests */,
 			);
 		};
 /* End PBXProject section */
@@ -211,6 +285,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				6B57C8D72B619FB00047DF0F /* Assets.xcassets in Resources */,
+				A10000712F00000100000001 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A100000A2F00000100000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -221,6 +303,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A10000312F00000100000001 /* DrPhosCalculatorComponents.swift in Sources */,
+				A10000112F00000100000001 /* ChemistryCalculations.swift in Sources */,
+				A10000212F00000100000001 /* ToolAccess.swift in Sources */,
 				6B0448A22E368ACB00DFF4DF /* AppTheme.swift in Sources */,
 				6B0448A32E368ACB00DFF4DF /* DrPhosSectionHeader.swift in Sources */,
 				6B0448A42E368ACB00DFF4DF /* DrPhosTextField.swift in Sources */,
@@ -236,21 +321,40 @@
 				6B0448B72E368AE800DFF4DF /* PeriodicTableView.swift in Sources */,
 				6B57C8D52B619FAF0047DF0F /* ContentView.swift in Sources */,
 				6B0448C42E368AFD00DFF4DF /* pHCalculatorView.swift in Sources */,
+				A10000512F00000100000001 /* pHReferenceView.swift in Sources */,
 				6B0448C52E368AFD00DFF4DF /* SigFigView.swift in Sources */,
 				6B0448C62E368AFD00DFF4DF /* IonicCompoundView.swift in Sources */,
 				6B0448C72E368AFD00DFF4DF /* StoichiometryView.swift in Sources */,
 				6B0448C82E368AFD00DFF4DF /* MolarMassView.swift in Sources */,
 				6B0448C92E368AFD00DFF4DF /* SciCalculatorView.swift in Sources */,
 				6B0448CA2E368AFD00DFF4DF /* SolutionsView.swift in Sources */,
+				A10000612F00000100000001 /* SolutionsReferenceView.swift in Sources */,
 				6B0448CB2E368AFD00DFF4DF /* GenChemNamingView.swift in Sources */,
 				6B0448CC2E368AFD00DFF4DF /* KineticsView.swift in Sources */,
+				A10000412F00000100000001 /* KineticsReferenceView.swift in Sources */,
 				6B0448CD2E368AFD00DFF4DF /* QuadradicEquationSolverView.swift in Sources */,
 				6B0448CE2E368AFD00DFF4DF /* BalancerView.swift in Sources */,
 				6B57C8D32B619FAF0047DF0F /* DrPhos_Chem_HelperApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A10000092F00000100000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000012F00000100000001 /* FormulaParserTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A100000B2F00000100000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6B57C8CE2B619FAF0047DF0F /* DrPhos Chem Helper */;
+			targetProxy = A10000032F00000100000001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		6B57C8DB2B619FB00047DF0F /* Debug */ = {
@@ -380,7 +484,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "DrPhos' Chemistry Pro";
@@ -394,7 +498,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.0;
+				MARKETING_VERSION = 4.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "drphos.DrPhos-GenChem-Helper";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -409,7 +513,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "DrPhos' Chemistry Pro";
@@ -423,12 +527,44 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.0;
+				MARKETING_VERSION = 4.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "drphos.DrPhos-GenChem-Helper";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		A100000C2F00000100000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 9VR66Z7XM3;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.2;
+				PRODUCT_BUNDLE_IDENTIFIER = "drphos.DrPhos-GenChem-HelperTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DrPhos Chem Helper.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/DrPhos Chem Helper";
+		};
+			name = Debug;
+		};
+		A100000D2F00000100000001 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 9VR66Z7XM3;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.2;
+				PRODUCT_BUNDLE_IDENTIFIER = "drphos.DrPhos-GenChem-HelperTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DrPhos Chem Helper.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/DrPhos Chem Helper";
 			};
 			name = Release;
 		};
@@ -449,6 +585,15 @@
 			buildConfigurations = (
 				6B57C8DE2B619FB00047DF0F /* Debug */,
 				6B57C8DF2B619FB00047DF0F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A10000082F00000100000001 /* Build configuration list for PBXNativeTarget "DrPhos Chem HelperTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A100000C2F00000100000001 /* Debug */,
+				A100000D2F00000100000001 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
