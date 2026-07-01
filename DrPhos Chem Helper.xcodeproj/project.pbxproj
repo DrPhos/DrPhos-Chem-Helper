@@ -42,6 +42,7 @@
 		6B57C8D72B619FB00047DF0F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6B57C8D62B619FB00047DF0F /* Assets.xcassets */; };
 		A10000712F00000100000001 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A10000722F00000100000001 /* PrivacyInfo.xcprivacy */; };
 		A20000112F00000100000001 /* ReactionBalancingEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000122F00000100000001 /* ReactionBalancingEngine.swift */; };
+		A20000212F00000100000001 /* StoichiometryEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000222F00000100000001 /* StoichiometryEngine.swift */; };
 		A10000012F00000100000001 /* FormulaParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000022F00000100000001 /* FormulaParserTests.swift */; };
 /* End PBXBuildFile section */
 
@@ -92,6 +93,7 @@
 		6B57C8D62B619FB00047DF0F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A10000722F00000100000001 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		A20000122F00000100000001 /* ReactionBalancingEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionBalancingEngine.swift; sourceTree = "<group>"; };
+		A20000222F00000100000001 /* StoichiometryEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoichiometryEngine.swift; sourceTree = "<group>"; };
 		A10000022F00000100000001 /* FormulaParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormulaParserTests.swift; sourceTree = "<group>"; };
 		A10000042F00000100000001 /* DrPhos Chem HelperTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "DrPhos Chem HelperTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -132,6 +134,7 @@
 			children = (
 				A10000122F00000100000001 /* ChemistryCalculations.swift */,
 				A20000122F00000100000001 /* ReactionBalancingEngine.swift */,
+				A20000222F00000100000001 /* StoichiometryEngine.swift */,
 				A10000222F00000100000001 /* ToolAccess.swift */,
 				6B0448A72E368AE800DFF4DF /* Compound.swift */,
 				6B0448A82E368AE800DFF4DF /* CompoundEntry.swift */,
@@ -307,6 +310,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A20000112F00000100000001 /* ReactionBalancingEngine.swift in Sources */,
+				A20000212F00000100000001 /* StoichiometryEngine.swift in Sources */,
 				A10000312F00000100000001 /* DrPhosCalculatorComponents.swift in Sources */,
 				A10000112F00000100000001 /* ChemistryCalculations.swift in Sources */,
 				A10000212F00000100000001 /* ToolAccess.swift in Sources */,

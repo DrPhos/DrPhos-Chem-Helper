@@ -167,84 +167,14 @@ struct StoichiometryView:View{
     }
 
     func stoichiometry(){
-        let adjustedMoles=viewModel.compounds.compactMap{compound->(index:Int,value:Double)?in
-            guard !compound.formula.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-                  compound.molarMass.isFinite,
-                  compound.molarMass > 0,
-                  compound.coefficient > 0,
-                  let enteredMoles=Double(compound.enteredMoles),
-                  enteredMoles.isFinite,
-                  enteredMoles>0 else{
-                return nil
-            }
-            let adjustedValue = enteredMoles / Double(compound.coefficient)
-            guard adjustedValue.isFinite else { return nil }
-            return(viewModel.compounds.firstIndex(where:{$0.id==compound.id})!,adjustedValue)
-        }
-        
-        guard let minMolesData=adjustedMoles.min(by:{$0.value<$1.value})else{
+        guard StoichiometryEngine().calculate(compounds: &viewModel.compounds) else {
             print("No valid moles found.")
             return
-        }
-        
-        let minMoles=minMolesData.value
-        let limitingIndex=minMolesData.index
-        
-        for i in viewModel.compounds.indices{
-            guard !viewModel.compounds[i].formula.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-                  viewModel.compounds[i].molarMass.isFinite,
-                  viewModel.compounds[i].molarMass > 0 else {
-                viewModel.compounds[i].calculatedMoles = ""
-                viewModel.compounds[i].calculatedGrams = ""
-                continue
-            }
-            let calculatedMolesValue=minMoles*Double(viewModel.compounds[i].coefficient)
-            guard calculatedMolesValue.isFinite else { continue }
-            viewModel.compounds[i].calculatedMoles=String(format:"%.4f",calculatedMolesValue)
-            
-            let calculatedGramsValue=calculatedMolesValue*viewModel.compounds[i].molarMass
-            guard calculatedGramsValue.isFinite else { continue }
-            viewModel.compounds[i].calculatedGrams=String(format:"%.4f",calculatedGramsValue)
-            
-            viewModel.compounds[i].isLimiting=(i==limitingIndex)
-            
-            if let enteredGrams=Double(viewModel.compounds[i].enteredGrams),enteredGrams>calculatedGramsValue{
-                viewModel.compounds[i].excessGrams=String(format:"%.4f",enteredGrams-calculatedGramsValue)
-            }else{
-                viewModel.compounds[i].excessGrams=""
-            }
-            
-            if let enteredMoles=Double(viewModel.compounds[i].enteredMoles),enteredMoles>calculatedMolesValue{
-                viewModel.compounds[i].excessMoles=String(format:"%.4f",enteredMoles-calculatedMolesValue)
-            }else{
-                viewModel.compounds[i].excessMoles=""
-            }
         }
     }
 
     func conditionType()->Int{
-        var reactants=0
-        var products=0
-        
-        for compound in viewModel.compounds{
-            if compound.isReactant&&(Double(compound.enteredGrams) ?? 0 > 0 || Double(compound.enteredMoles) ?? 0 > 0){
-                reactants += 1
-            }else if !compound.isReactant && (Double(compound.enteredGrams) ?? 0 > 0 || Double(compound.enteredMoles) ?? 0 > 0){
-                products+=1
-            }
-        }
-        
-        if reactants==1&&products==0{
-            return 1
-        }else if reactants>1&&products==0{
-            return 2
-        }else if reactants==0&&products==1{
-            return 3
-        }else if reactants>0&&products>0{
-            return 4
-        }
-        
-        return 0
+        StoichiometryEngine().conditionType(for: viewModel.compounds)
     }
 }
 
