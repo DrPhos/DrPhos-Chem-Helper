@@ -57,6 +57,7 @@ class CompoundsViewModel:ObservableObject{
     @Published var compounds:[Compound]=[]
     
     func addReactant(formula:String){
+        guard !formula.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         let parsedFormula=parseChemicalFormula(formula)
         let molarMass=calculateMolarMass(parsedFormula)
         let newCompound=Compound(
@@ -73,11 +74,14 @@ class CompoundsViewModel:ObservableObject{
             parsedFormula:parsedFormula,
             isLimiting:false
         )
-        compounds.append(newCompound)
-        printCompounds()
+        var updatedCompounds = compounds
+        resetAmounts(in: &updatedCompounds)
+        updatedCompounds.append(newCompound)
+        compounds = updatedCompounds
     }
     
     func addProduct(formula:String){
+        guard !formula.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         let parsedFormula=parseChemicalFormula(formula)
         let molarMass=calculateMolarMass(parsedFormula)
         let newCompound=Compound(
@@ -94,8 +98,10 @@ class CompoundsViewModel:ObservableObject{
             parsedFormula:parsedFormula,
             isLimiting:false
         )
-        compounds.append(newCompound)
-        printCompounds()
+        var updatedCompounds = compounds
+        resetAmounts(in: &updatedCompounds)
+        updatedCompounds.append(newCompound)
+        compounds = updatedCompounds
     }
 
     func parseChemicalFormula(_ formula:String)->String{
@@ -187,39 +193,86 @@ class CompoundsViewModel:ObservableObject{
 
     func recordEnteredAmounts(inputMode: StoichiometryView.InputMode){
         for index in compounds.indices{
+            let compound = compounds[index]
+            let hasValidFormula = !compound.formula.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                && compound.molarMass.isFinite
+                && compound.molarMass > 0
+
+            guard hasValidFormula else {
+                compounds[index].enteredMoles = ""
+                compounds[index].calculatedGrams = ""
+                compounds[index].calculatedMoles = ""
+                continue
+            }
+
             if inputMode == .grams{
-                compounds[index].enteredGrams = compounds[index].enteredGrams.isEmpty ? "0" : compounds[index].enteredGrams
-                compounds[index].enteredMoles = String((Double(compounds[index].enteredGrams) ?? 0)/compounds[index].molarMass)
+                guard !compound.enteredGrams.isEmpty else {
+                    compounds[index].enteredMoles = ""
+                    continue
+                }
+                guard let grams = Double(compound.enteredGrams), grams.isFinite, grams >= 0 else {
+                    compounds[index].enteredMoles = ""
+                    continue
+                }
+                let moles = grams / compound.molarMass
+                compounds[index].enteredMoles = moles.isFinite ? String(moles) : ""
             }else if inputMode == .moles{
-                compounds[index].enteredMoles = compounds[index].enteredMoles.isEmpty ? "0" : compounds[index].enteredMoles
-                compounds[index].enteredGrams = String((Double(compounds[index].enteredMoles) ?? 0)*compounds[index].molarMass)
+                guard !compound.enteredMoles.isEmpty else {
+                    compounds[index].enteredGrams = ""
+                    continue
+                }
+                guard let moles = Double(compound.enteredMoles), moles.isFinite, moles >= 0 else {
+                    compounds[index].enteredGrams = ""
+                    continue
+                }
+                let grams = moles * compound.molarMass
+                compounds[index].enteredGrams = grams.isFinite ? String(grams) : ""
             }
         }
-        printCompounds()
     }
 
     func clearEnteredAndCalculatedValues(){
-        for index in compounds.indices{
-            compounds[index].enteredGrams=""
-            compounds[index].calculatedGrams=""
-            compounds[index].excessGrams=""
-            compounds[index].enteredMoles=""
-            compounds[index].calculatedMoles=""
-            compounds[index].calculatedMoles=""
-        }
-        print("All amounts(g and mol)cleared")
+        var updatedCompounds = compounds
+        guard resetAmounts(in: &updatedCompounds) else { return }
+        compounds = updatedCompounds
+    }
+
+    func updateCoefficient(compoundID: UUID, coefficient: Int) {
+        guard let index = compounds.firstIndex(where: { $0.id == compoundID }),
+              compounds[index].coefficient != coefficient else { return }
+
+        var updatedCompounds = compounds
+        updatedCompounds[index].coefficient = coefficient
+        resetAmounts(in: &updatedCompounds)
+        compounds = updatedCompounds
     }
 
     func clearCompounds(){
         compounds.removeAll()
-        print("All compounds cleared")
     }
 
-    private func printCompounds(){
-        for compound in compounds{
-            print("Formula:\(compound.formula),Parsed Formula:\(compound.parsedFormula),Molar Mass:\(compound.molarMass),Entered Grams:\(compound.enteredGrams),Calculated Grams:\(compound.calculatedGrams),Entered Moles:\(compound.enteredMoles),Calculated Moles:\(compound.calculatedMoles),Coefficient:\(compound.coefficient),Is Reactant:\(compound.isReactant)")
+    @discardableResult
+    private func resetAmounts(in compounds: inout [Compound]) -> Bool {
+        var changed = false
+        for index in compounds.indices {
+            let hasValues = !compounds[index].enteredGrams.isEmpty
+                || !compounds[index].calculatedGrams.isEmpty
+                || !compounds[index].excessGrams.isEmpty
+                || !compounds[index].enteredMoles.isEmpty
+                || !compounds[index].calculatedMoles.isEmpty
+                || !compounds[index].excessMoles.isEmpty
+                || compounds[index].isLimiting
+            guard hasValues else { continue }
+
+            changed = true
+            compounds[index].enteredGrams = ""
+            compounds[index].calculatedGrams = ""
+            compounds[index].excessGrams = ""
+            compounds[index].enteredMoles = ""
+            compounds[index].calculatedMoles = ""
+            compounds[index].excessMoles = ""
+            compounds[index].isLimiting = false
         }
+        return changed
     }
 }
-
-

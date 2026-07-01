@@ -74,7 +74,7 @@ struct PeriodicTableView: View {
                                     }
                                 }
                                 .padding()
-                                .frame(minWidth: geo.size.width)
+                                .frame(minWidth: sanitizedWidth(geo.size.width))
                             }
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -84,6 +84,11 @@ struct PeriodicTableView: View {
             }
         }
         
+    }
+
+    private func sanitizedWidth(_ width: CGFloat) -> CGFloat {
+        guard width.isFinite else { return 0 }
+        return max(0, width)
     }
     
     func getButtonColor(row: Int, column: Int) -> Color {

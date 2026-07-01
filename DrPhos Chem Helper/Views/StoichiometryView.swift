@@ -87,7 +87,6 @@ struct StoichiometryView:View{
                 .frame(width:300)
                 .padding()
                 .onChange(of:inputMode){
-                    viewModel.clearEnteredAndCalculatedValues()
                     calculationComplete = false
                 }
             }
@@ -142,7 +141,7 @@ struct StoichiometryView:View{
         }
 //        .padding(.top, -50)
     }
-    
+
     private var clearButtonOverlay: some View {
         HStack {
             Spacer()
@@ -159,10 +158,18 @@ struct StoichiometryView:View{
 
     func stoichiometry(){
         let adjustedMoles=viewModel.compounds.compactMap{compound->(index:Int,value:Double)?in
-            guard let enteredMoles=Double(compound.enteredMoles),enteredMoles>0 else{
+            guard !compound.formula.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                  compound.molarMass.isFinite,
+                  compound.molarMass > 0,
+                  compound.coefficient > 0,
+                  let enteredMoles=Double(compound.enteredMoles),
+                  enteredMoles.isFinite,
+                  enteredMoles>0 else{
                 return nil
             }
-            return(viewModel.compounds.firstIndex(where:{$0.id==compound.id})!,enteredMoles/Double(compound.coefficient))
+            let adjustedValue = enteredMoles / Double(compound.coefficient)
+            guard adjustedValue.isFinite else { return nil }
+            return(viewModel.compounds.firstIndex(where:{$0.id==compound.id})!,adjustedValue)
         }
         
         guard let minMolesData=adjustedMoles.min(by:{$0.value<$1.value})else{
@@ -172,16 +179,22 @@ struct StoichiometryView:View{
         
         let minMoles=minMolesData.value
         let limitingIndex=minMolesData.index
-        print("Minimum adjusted moles:\(minMoles)")
         
         for i in viewModel.compounds.indices{
+            guard !viewModel.compounds[i].formula.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                  viewModel.compounds[i].molarMass.isFinite,
+                  viewModel.compounds[i].molarMass > 0 else {
+                viewModel.compounds[i].calculatedMoles = ""
+                viewModel.compounds[i].calculatedGrams = ""
+                continue
+            }
             let calculatedMolesValue=minMoles*Double(viewModel.compounds[i].coefficient)
+            guard calculatedMolesValue.isFinite else { continue }
             viewModel.compounds[i].calculatedMoles=String(format:"%.4f",calculatedMolesValue)
-            print("Calculated moles for \(viewModel.compounds[i].formula):\(viewModel.compounds[i].calculatedMoles)")
             
             let calculatedGramsValue=calculatedMolesValue*viewModel.compounds[i].molarMass
+            guard calculatedGramsValue.isFinite else { continue }
             viewModel.compounds[i].calculatedGrams=String(format:"%.4f",calculatedGramsValue)
-            print("Calculated grams for \(viewModel.compounds[i].formula):\(viewModel.compounds[i].calculatedGrams)")
             
             viewModel.compounds[i].isLimiting=(i==limitingIndex)
             
@@ -227,6 +240,7 @@ struct StoichiometryView:View{
 
 struct CompoundView:View{
     var viewModel:CompoundsViewModel
+    @State private var activeKeyboardField: Binding<String>?
     @Binding var compounds:[Compound]
     @Binding var inputMode: StoichiometryView.InputMode
     @Binding var areFieldsEditable:Bool
@@ -250,7 +264,10 @@ struct CompoundView:View{
                                 Text(String(format:"%.2f g/mol",compounds[index].molarMass))
                                     .font(.subheadline)
                                 HStack{
-                                    Picker("Coefficient",selection:$compounds[index].coefficient){
+                                    Picker(
+                                        "Coefficient",
+                                        selection: coefficientBinding(for: compounds[index].id)
+                                    ) {
                                         ForEach(1..<21){
                                             Text("\($0)").tag($0)
                                         }
@@ -258,29 +275,35 @@ struct CompoundView:View{
                                     .pickerStyle(MenuPickerStyle())
                                     .accentColor(.phosred1)
                                     .padding(.leading,-10)
-                                    .onChange(of: compounds[index].coefficient) {
-                                        viewModel.clearEnteredAndCalculatedValues()
-                                        calculationComplete = false
-                                    }
                                     
                                     Text(compounds[index].formula)
                                         .padding(.leading,-15)
                                 }
                                 if inputMode == .grams{
+                                    let gramsBinding = amountBinding(for: compounds[index].id, kind: .grams)
                                     HStack{
-                                        TextField("grams",text:$compounds[index].enteredGrams)
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 10)
-                                                    .stroke(Color.phostext, lineWidth: 1)
-                                            )
-                                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                                        TextField(
+                                            "grams",
+                                            text: gramsBinding,
+                                            onEditingChanged: { isEditing in
+                                                activeKeyboardField = isEditing ? gramsBinding : nil
+                                            }
+                                        )
+                                            .textFieldStyle(.roundedBorder)
                                             .keyboardType(.decimalPad)
                                             .disabled(calculationComplete)
                                         Text("g")
                                     }
                                 }else{
+                                    let molesBinding = amountBinding(for: compounds[index].id, kind: .moles)
                                     HStack{
-                                        TextField("moles",text:$compounds[index].enteredMoles)
+                                        TextField(
+                                            "moles",
+                                            text: molesBinding,
+                                            onEditingChanged: { isEditing in
+                                                activeKeyboardField = isEditing ? molesBinding : nil
+                                            }
+                                        )
                                             .overlay(
                                                 RoundedRectangle(cornerRadius: 10)
                                                     .stroke(Color.phostext, lineWidth: 1)
@@ -438,7 +461,10 @@ struct CompoundView:View{
                                 Text(String(format:"%.2f g/mol",compounds[index].molarMass))
                                     .font(.subheadline)
                                 HStack{
-                                    Picker("Coefficient",selection:$compounds[index].coefficient){
+                                    Picker(
+                                        "Coefficient",
+                                        selection: coefficientBinding(for: compounds[index].id)
+                                    ) {
                                         ForEach(1..<21){
                                             Text("\($0)").tag($0)
                                         }
@@ -450,8 +476,15 @@ struct CompoundView:View{
                                         .padding(.leading,-15)
                                 }
                                 if inputMode == .grams{
+                                    let gramsBinding = amountBinding(for: compounds[index].id, kind: .grams)
                                     HStack{
-                                        TextField("grams",text:$compounds[index].enteredGrams)
+                                        TextField(
+                                            "grams",
+                                            text: gramsBinding,
+                                            onEditingChanged: { isEditing in
+                                                activeKeyboardField = isEditing ? gramsBinding : nil
+                                            }
+                                        )
                                             .overlay(
                                                 RoundedRectangle(cornerRadius: 10)
                                                     .stroke(Color.phostext, lineWidth: 1)
@@ -462,8 +495,15 @@ struct CompoundView:View{
                                         Text("g")
                                     }
                                 }else{
+                                    let molesBinding = amountBinding(for: compounds[index].id, kind: .moles)
                                     HStack{
-                                        TextField("moles",text:$compounds[index].enteredMoles)
+                                        TextField(
+                                            "moles",
+                                            text: molesBinding,
+                                            onEditingChanged: { isEditing in
+                                                activeKeyboardField = isEditing ? molesBinding : nil
+                                            }
+                                        )
                                             .overlay(
                                                 RoundedRectangle(cornerRadius: 10)
                                                     .stroke(Color.phostext, lineWidth: 1)
@@ -567,7 +607,64 @@ struct CompoundView:View{
             }
         }
         .padding()
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                CustomKeyboardToolbar(activeField: $activeKeyboardField)
+            }
+        }
     }
+
+    private func amountBinding(for compoundID: UUID, kind: StoichiometryAmountKind) -> Binding<String> {
+        Binding(
+            get: {
+                guard let compound = compounds.first(where: { $0.id == compoundID }) else { return "" }
+                return kind == .grams ? compound.enteredGrams : compound.enteredMoles
+            },
+            set: { newValue in
+                guard let index = compounds.firstIndex(where: { $0.id == compoundID }) else { return }
+                guard isValidAmountInput(newValue) else { return }
+
+                if kind == .grams {
+                    guard compounds[index].enteredGrams != newValue else { return }
+                    compounds[index].enteredGrams = newValue
+                } else {
+                    guard compounds[index].enteredMoles != newValue else { return }
+                    compounds[index].enteredMoles = newValue
+                }
+            }
+        )
+    }
+
+    private func isValidAmountInput(_ value: String) -> Bool {
+        if value.isEmpty || value == "." { return true }
+        if let number = Double(value) { return number.isFinite && number >= 0 }
+
+        let parts = value.lowercased().split(separator: "e", omittingEmptySubsequences: false)
+        guard parts.count == 2,
+              let mantissa = Double(parts[0]),
+              mantissa.isFinite,
+              mantissa >= 0 else { return false }
+
+        let exponent = String(parts[1])
+        return exponent.isEmpty || exponent == "+" || exponent == "-"
+    }
+
+    private func coefficientBinding(for compoundID: UUID) -> Binding<Int> {
+        Binding(
+            get: {
+                compounds.first(where: { $0.id == compoundID })?.coefficient ?? 1
+            },
+            set: { newCoefficient in
+                viewModel.updateCoefficient(compoundID: compoundID, coefficient: newCoefficient)
+                calculationComplete = false
+            }
+        )
+    }
+}
+
+enum StoichiometryAmountKind: Hashable {
+    case grams
+    case moles
 }
 
 struct GramsAndMolesTextView:View{
