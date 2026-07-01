@@ -475,68 +475,7 @@ class ReactionBalancerViewModel: ObservableObject {
     }
     
     func solve(_ x: String) -> [Double] {
-        var bigNumber = 1
-        var arrayOfNumbers = Set(x.split { !"0123456789".contains($0) }.map { Int($0) }.compactMap { $0 })
-        arrayOfNumbers.remove(0)
-        for i in arrayOfNumbers {
-            bigNumber *= i
-        }
-        let components = x.components(separatedBy: "=")
-        guard components.count > 1 else {
-            return []
-        }
-        let leftComponents = x.components(separatedBy: "=")[0].components(separatedBy: "+")
-        let rightComponents = x.components(separatedBy: "=")[1].components(separatedBy: "+")
-        guard leftComponents.count > 0 else {
-            return []
-        }
-        guard rightComponents.count > 0 else {
-            return []
-        }
-        let left = x.components(separatedBy: "=")[0].components(separatedBy: "+")
-        let right = x.components(separatedBy: "=")[1].components(separatedBy: "+")
-        var elems = Set(x.replacingOccurrences(of: "\\d+|\\+|=", with: "", options: .regularExpression).matchAll1(regex: "([A-Z][a-z]*)|([A-Z]*)").map { $0[0] })
-        elems.remove("")
-        var rrefArray: [[Int]] = []
-        for elem in elems {
-            var buildArr: [Int] = []
-            for molecule in left {
-                do {
-                    let pattern = "\(elem)(\\d+)"
-                    let regex = try NSRegularExpression(pattern: pattern, options: [])
-                    if let match = regex.firstMatch(in: molecule, options: [], range: NSRange(location: 0, length: molecule.utf16.count)) {
-                        if let range = Range(match.range(at: 1), in: molecule),
-                           let number = Int(molecule[range]) {
-                            buildArr.append(number)
-                        }
-                    } else {
-                        buildArr.append(0)
-                    }
-                } catch {
-                }
-            }
-            for molecule in right {
-                do {
-                    let pattern = "\(elem)(\\d+)"
-                    let regex = try NSRegularExpression(pattern: pattern, options: [])
-                    if let match = regex.firstMatch(in: molecule, options: [], range: NSRange(location: 0, length: molecule.utf16.count)) {
-                        if let range = Range(match.range(at: 1), in: molecule),
-                           let number = Int(molecule[range]) {
-                            buildArr.append(number)
-                        }
-                    } else {
-                        buildArr.append(0)
-                    }
-                } catch {
-                }
-            }
-            rrefArray.append(buildArr)
-        }
-        var doubleArray = rrefArray.map { $0.map(Double.init) }
-        convertToReducedEchelonForm(&doubleArray)
-        let lastColumn = doubleArray.map { $0.last ?? 0 }
-        let lastArray = multiplyArray(lastColumn)
-        return lastArray
+        ReactionBalancingEngine().solve(x)
     }
     
     func convertToReducedEchelonForm(_ matrix: inout [[Double]]) {
@@ -592,10 +531,7 @@ class ReactionBalancerViewModel: ObservableObject {
     }
     
     func convertToIntegerArray(_ numbers: [Double]) -> [(id: Int, value: Int)] {
-        return numbers
-            .enumerated()
-            .map { (id: $0.offset, value: Int($0.element)) }
-            .filter { $0.value != 0 }
+        ReactionBalancingEngine().integerCoefficients(from: numbers)
     }
     
     func combinedText() -> String {
