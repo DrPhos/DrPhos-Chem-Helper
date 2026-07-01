@@ -94,6 +94,7 @@ struct ContentView: View {
         case .sigFigs: SigFigView()
         case .kinetics: KineticsView()
         case .ph: pHCalculatorView()
+        case .combinedReaction: CombinedReactionView()
         case .stoichiometry: StoichiometryView()
         case .molarMass: MolarMassView()
         case .ionic: IonicCompoundBuilderView()
@@ -132,6 +133,7 @@ struct SidebarRow: View {
         case .sigFigs: return "number"
         case .kinetics: return "flag.checkered"
         case .ph: return "testtube.2"
+        case .combinedReaction: return "arrow.down.circle"
         case .stoichiometry: return "flask"
         case .molarMass: return "atom"
         case .solutions: return "water.waves"

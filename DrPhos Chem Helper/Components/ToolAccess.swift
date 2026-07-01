@@ -6,6 +6,7 @@ enum ToolID: String, CaseIterable, Identifiable, Codable {
     case molarMass = "Molar Mass Calculator"
     case ionic = "Ionic Compound Builder"
     case naming = "Naming Compounds"
+    case combinedReaction = "Reaction Workflow"
     case balancer = "Reaction Balancer"
     case stoichiometry = "Stoichiometry"
     case solutions = "Solution Concentrations"
@@ -19,7 +20,7 @@ enum ToolID: String, CaseIterable, Identifiable, Codable {
         switch self {
         case .calculator, .sigFigs, .quadratic: .calculators
         case .molarMass, .ionic, .naming: .compounds
-        case .balancer, .stoichiometry, .kinetics: .reactions
+        case .combinedReaction, .balancer, .stoichiometry, .kinetics: .reactions
         case .solutions, .ph: .solutions
         }
     }
