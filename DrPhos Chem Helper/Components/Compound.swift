@@ -247,6 +247,17 @@ class CompoundsViewModel:ObservableObject{
         compounds = updatedCompounds
     }
 
+    func applyCoefficients(_ coefficients: [UUID: Int]) {
+        guard compounds.allSatisfy({ coefficients[$0.id] != nil }) else { return }
+
+        var updatedCompounds = compounds
+        for index in updatedCompounds.indices {
+            updatedCompounds[index].coefficient = coefficients[updatedCompounds[index].id] ?? 1
+        }
+        resetAmounts(in: &updatedCompounds)
+        compounds = updatedCompounds
+    }
+
     func clearCompounds(){
         compounds.removeAll()
     }
