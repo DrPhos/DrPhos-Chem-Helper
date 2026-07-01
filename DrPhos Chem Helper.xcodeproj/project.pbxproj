@@ -43,6 +43,7 @@
 		A10000712F00000100000001 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A10000722F00000100000001 /* PrivacyInfo.xcprivacy */; };
 		A20000112F00000100000001 /* ReactionBalancingEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000122F00000100000001 /* ReactionBalancingEngine.swift */; };
 		A20000212F00000100000001 /* StoichiometryEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000222F00000100000001 /* StoichiometryEngine.swift */; };
+		A20000312F00000100000001 /* CombinedReactionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000322F00000100000001 /* CombinedReactionView.swift */; };
 		A10000012F00000100000001 /* FormulaParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000022F00000100000001 /* FormulaParserTests.swift */; };
 /* End PBXBuildFile section */
 
@@ -94,6 +95,7 @@
 		A10000722F00000100000001 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		A20000122F00000100000001 /* ReactionBalancingEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionBalancingEngine.swift; sourceTree = "<group>"; };
 		A20000222F00000100000001 /* StoichiometryEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoichiometryEngine.swift; sourceTree = "<group>"; };
+		A20000322F00000100000001 /* CombinedReactionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CombinedReactionView.swift; sourceTree = "<group>"; };
 		A10000022F00000100000001 /* FormulaParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormulaParserTests.swift; sourceTree = "<group>"; };
 		A10000042F00000100000001 /* DrPhos Chem HelperTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "DrPhos Chem HelperTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -151,6 +153,7 @@
 		6B0448C32E368AFD00DFF4DF /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				A20000322F00000100000001 /* CombinedReactionView.swift */,
 				6B0448B82E368AFD00DFF4DF /* BalancerView.swift */,
 				6B0448B92E368AFD00DFF4DF /* GenChemNamingView.swift */,
 				6B0448BA2E368AFD00DFF4DF /* IonicCompoundView.swift */,
@@ -311,6 +314,7 @@
 			files = (
 				A20000112F00000100000001 /* ReactionBalancingEngine.swift in Sources */,
 				A20000212F00000100000001 /* StoichiometryEngine.swift in Sources */,
+				A20000312F00000100000001 /* CombinedReactionView.swift in Sources */,
 				A10000312F00000100000001 /* DrPhosCalculatorComponents.swift in Sources */,
 				A10000112F00000100000001 /* ChemistryCalculations.swift in Sources */,
 				A10000212F00000100000001 /* ToolAccess.swift in Sources */,
