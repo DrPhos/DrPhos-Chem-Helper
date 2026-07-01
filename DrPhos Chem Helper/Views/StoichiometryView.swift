@@ -21,6 +21,7 @@ struct StoichiometryView:View{
     @State private var inputMode:InputMode = .grams
     @State private var calculationComplete = false
     @State private var showCompoundEntry = false
+    @State private var isEditingAmount = false
     
     enum InputMode{
         case grams
@@ -89,6 +90,14 @@ struct StoichiometryView:View{
                 .onChange(of:inputMode){
                     calculationComplete = false
                 }
+
+                if isEditingAmount {
+                    Button("Done") {
+                        isEditingAmount = false
+                        UIApplication.shared.endEditing()
+                    }
+                    .buttonStyle(.bordered)
+                }
             }
             
             VStack(alignment: .center, content: {
@@ -102,6 +111,7 @@ struct StoichiometryView:View{
                                 inputMode:$inputMode,
                                 areFieldsEditable:.constant(true),
                                 calculationComplete:$calculationComplete,
+                                isEditingAmount: $isEditingAmount,
                                 conditionType:conditionType()
                             )
                         }
@@ -245,6 +255,7 @@ struct CompoundView:View{
     @Binding var inputMode: StoichiometryView.InputMode
     @Binding var areFieldsEditable:Bool
     @Binding var calculationComplete:Bool
+    @Binding var isEditingAmount: Bool
     var conditionType:Int
 
     var body:some View{
@@ -287,6 +298,7 @@ struct CompoundView:View{
                                             text: gramsBinding,
                                             onEditingChanged: { isEditing in
                                                 activeKeyboardField = isEditing ? gramsBinding : nil
+                                                isEditingAmount = isEditing
                                             }
                                         )
                                             .textFieldStyle(.roundedBorder)
@@ -302,6 +314,7 @@ struct CompoundView:View{
                                             text: molesBinding,
                                             onEditingChanged: { isEditing in
                                                 activeKeyboardField = isEditing ? molesBinding : nil
+                                                isEditingAmount = isEditing
                                             }
                                         )
                                             .overlay(
@@ -483,6 +496,7 @@ struct CompoundView:View{
                                             text: gramsBinding,
                                             onEditingChanged: { isEditing in
                                                 activeKeyboardField = isEditing ? gramsBinding : nil
+                                                isEditingAmount = isEditing
                                             }
                                         )
                                             .overlay(
@@ -502,6 +516,7 @@ struct CompoundView:View{
                                             text: molesBinding,
                                             onEditingChanged: { isEditing in
                                                 activeKeyboardField = isEditing ? molesBinding : nil
+                                                isEditingAmount = isEditing
                                             }
                                         )
                                             .overlay(
@@ -607,11 +622,6 @@ struct CompoundView:View{
             }
         }
         .padding()
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                CustomKeyboardToolbar(activeField: $activeKeyboardField)
-            }
-        }
     }
 
     private func amountBinding(for compoundID: UUID, kind: StoichiometryAmountKind) -> Binding<String> {
