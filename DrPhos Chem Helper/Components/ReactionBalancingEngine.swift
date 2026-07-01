@@ -1,6 +1,26 @@
 import Foundation
 
 struct ReactionBalancingEngine {
+    func coefficients(for compounds: [Compound]) -> [UUID: Int]? {
+        let reactants = compounds.filter(\.isReactant)
+        let products = compounds.filter { !$0.isReactant }
+        guard !reactants.isEmpty, !products.isEmpty else { return nil }
+
+        let orderedCompounds = reactants + products
+        guard orderedCompounds.allSatisfy({ !$0.parsedFormula.isEmpty }) else { return nil }
+
+        let reaction = reactants.map(\.parsedFormula).joined(separator: "+")
+            + "="
+            + products.map(\.parsedFormula).joined(separator: "+")
+        let coefficients = integerCoefficients(from: solve(reaction)).map(\.value)
+        guard coefficients.count == orderedCompounds.count,
+              coefficients.allSatisfy({ $0 > 0 }) else {
+            return nil
+        }
+
+        return Dictionary(uniqueKeysWithValues: zip(orderedCompounds.map(\.id), coefficients))
+    }
+
     func solve(_ reaction: String) -> [Double] {
         let components = reaction.components(separatedBy: "=")
         guard components.count == 2 else { return [] }

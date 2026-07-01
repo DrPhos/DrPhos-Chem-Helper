@@ -251,6 +251,13 @@ class CompoundsViewModel:ObservableObject{
         compounds.removeAll()
     }
 
+    func removeCompound(id: UUID) {
+        guard compounds.contains(where: { $0.id == id }) else { return }
+        var updatedCompounds = compounds.filter { $0.id != id }
+        resetAmounts(in: &updatedCompounds)
+        compounds = updatedCompounds
+    }
+
     @discardableResult
     private func resetAmounts(in compounds: inout [Compound]) -> Bool {
         var changed = false
