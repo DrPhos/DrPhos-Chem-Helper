@@ -237,6 +237,14 @@ class CompoundsViewModel:ObservableObject{
         compounds = updatedCompounds
     }
 
+    @discardableResult
+    func calculateStoichiometry() -> Bool {
+        var updatedCompounds = compounds
+        guard StoichiometryEngine().calculate(compounds: &updatedCompounds) else { return false }
+        compounds = updatedCompounds
+        return true
+    }
+
     func updateCoefficient(compoundID: UUID, coefficient: Int) {
         guard let index = compounds.firstIndex(where: { $0.id == compoundID }),
               compounds[index].coefficient != coefficient else { return }
