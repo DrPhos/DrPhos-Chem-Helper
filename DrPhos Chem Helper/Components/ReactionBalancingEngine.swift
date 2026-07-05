@@ -1,6 +1,12 @@
 import Foundation
 
 struct ReactionBalancingEngine {
+    func coefficients(for reaction: String) -> [Int]? {
+        guard let normalizedReaction = normalizedReaction(from: reaction) else { return nil }
+        let coefficients = integerCoefficients(from: solve(normalizedReaction)).map(\.value)
+        return coefficients.isEmpty ? nil : coefficients
+    }
+
     func coefficients(for compounds: [Compound]) -> [UUID: Int]? {
         let reactants = compounds.filter(\.isReactant)
         let products = compounds.filter { !$0.isReactant }
@@ -38,23 +44,20 @@ struct ReactionBalancingEngine {
         elements.remove("")
         guard !elements.isEmpty else { return [] }
 
-        var matrix: [[Int]] = []
+        var matrix: [[Double]] = []
         for element in elements {
-            var row = moleculeCounts(for: element, in: left)
-            row.append(contentsOf: moleculeCounts(for: element, in: right))
+            var row = moleculeCounts(for: element, in: left).map(Double.init)
+            row.append(contentsOf: moleculeCounts(for: element, in: right).map { -Double($0) })
             matrix.append(row)
         }
 
-        var reducedMatrix = matrix.map { $0.map(Double.init) }
-        guard !reducedMatrix.isEmpty, !(reducedMatrix.first?.isEmpty ?? true) else { return [] }
-        convertToReducedEchelonForm(&reducedMatrix)
-        return multiplyToWholeNumbers(reducedMatrix.map { $0.last ?? 0 })
+        return nullSpaceCoefficients(for: matrix)
     }
 
     func integerCoefficients(from values: [Double]) -> [(id: Int, value: Int)] {
         values
             .enumerated()
-            .map { (id: $0.offset, value: Int($0.element)) }
+            .map { (id: $0.offset, value: Int($0.element.rounded())) }
             .filter { $0.value != 0 }
     }
 
@@ -74,49 +77,130 @@ struct ReactionBalancingEngine {
         }
     }
 
-    private func convertToReducedEchelonForm(_ matrix: inout [[Double]]) {
-        let rowCount = matrix.count
-        guard rowCount > 0, let colCount = matrix.first?.count, colCount > 0 else { return }
+    private func normalizedReaction(from reaction: String) -> String? {
+        let canonical = reaction
+            .replacingOccurrences(of: "-->", with: "=")
+            .replacingOccurrences(of: "->", with: "=")
+            .replacingOccurrences(of: "→", with: "=")
+        let sides = canonical.components(separatedBy: "=")
+        guard sides.count == 2 else { return nil }
 
-        var lead = 0
-        for row in 0..<rowCount {
-            guard lead < colCount else { return }
-
-            var pivotRow = row
-            while matrix[pivotRow][lead] == 0 {
-                pivotRow += 1
-                if pivotRow == rowCount {
-                    pivotRow = row
-                    lead += 1
-                    guard lead < colCount else { return }
-                }
-            }
-
-            matrix.swapAt(pivotRow, row)
-            let pivot = matrix[row][lead]
-            guard pivot != 0 else { continue }
-
-            for column in 0..<colCount {
-                matrix[row][column] /= pivot
-            }
-            for otherRow in 0..<rowCount where otherRow != row {
-                let multiplier = matrix[otherRow][lead]
-                for column in 0..<colCount {
-                    matrix[otherRow][column] -= multiplier * matrix[row][column]
-                }
-            }
-            lead += 1
-        }
+        let left = normalizedFormulas(in: sides[0])
+        let right = normalizedFormulas(in: sides[1])
+        guard let left, let right, !left.isEmpty, !right.isEmpty else { return nil }
+        return left.joined(separator: "+") + "=" + right.joined(separator: "+")
     }
 
-    private func multiplyToWholeNumbers(_ numbers: [Double]) -> [Double] {
+    private func normalizedFormulas(in side: String) -> [String]? {
+        let formulas = side
+            .components(separatedBy: "+")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        guard !formulas.isEmpty, formulas.allSatisfy({ !$0.isEmpty }) else { return nil }
+
+        var normalized: [String] = []
+        for formula in formulas {
+            let result = FormulaParser.parse(formula)
+            guard result.isValid, !result.parsedElements.isEmpty else { return nil }
+            let counts = Dictionary(
+                result.parsedElements.map { ($0.symbol, $0.count) },
+                uniquingKeysWith: +
+            )
+            normalized.append(
+                counts
+                    .sorted { $0.key < $1.key }
+                    .map { "\($0.key)\($0.value)" }
+                    .joined()
+            )
+        }
+        return normalized
+    }
+
+    private func nullSpaceCoefficients(for matrix: [[Double]]) -> [Double] {
+        guard !matrix.isEmpty, let columnCount = matrix.first?.count, columnCount > 1 else {
+            return []
+        }
+
+        var reduced = matrix
+        let pivotColumns = reduceToRowEchelonForm(&reduced)
+        let freeColumns = (0..<columnCount).filter { !pivotColumns.contains($0) }
+        guard freeColumns.count == 1, let freeColumn = freeColumns.first else { return [] }
+
+        var solution = Array(repeating: 0.0, count: columnCount)
+        solution[freeColumn] = 1
+
+        for (row, pivotColumn) in pivotColumns.enumerated() where row < reduced.count {
+            var sum = 0.0
+            for column in freeColumns {
+                sum += reduced[row][column] * solution[column]
+            }
+            solution[pivotColumn] = -sum
+        }
+
+        let tolerance = 0.0001
+        guard solution.allSatisfy({ $0.isFinite && abs($0) > tolerance }) else { return [] }
+        if solution.allSatisfy({ $0 < 0 }) {
+            solution = solution.map { -$0 }
+        }
+        guard solution.allSatisfy({ $0 > 0 }) else { return [] }
+
+        return scaleToSmallestWholeNumbers(solution)
+    }
+
+    private func reduceToRowEchelonForm(_ matrix: inout [[Double]]) -> [Int] {
+        let tolerance = 1e-10
+        let rowCount = matrix.count
+        let columnCount = matrix[0].count
+        var pivotColumns: [Int] = []
+        var pivotRow = 0
+
+        for column in 0..<columnCount where pivotRow < rowCount {
+            guard let selectedRow = (pivotRow..<rowCount).first(where: {
+                abs(matrix[$0][column]) > tolerance
+            }) else {
+                continue
+            }
+
+            matrix.swapAt(selectedRow, pivotRow)
+            let pivot = matrix[pivotRow][column]
+            for currentColumn in 0..<columnCount {
+                matrix[pivotRow][currentColumn] /= pivot
+            }
+
+            for row in 0..<rowCount where row != pivotRow {
+                let multiplier = matrix[row][column]
+                guard abs(multiplier) > tolerance else { continue }
+                for currentColumn in 0..<columnCount {
+                    matrix[row][currentColumn] -= multiplier * matrix[pivotRow][currentColumn]
+                }
+            }
+
+            pivotColumns.append(column)
+            pivotRow += 1
+        }
+
+        return pivotColumns
+    }
+
+    private func scaleToSmallestWholeNumbers(_ numbers: [Double]) -> [Double] {
         let tolerance = 0.0001
         for constant in 1...100 {
             let multiplied = numbers.map { $0 * Double(constant) }
             if multiplied.allSatisfy({ abs($0 - round($0)) < tolerance }) {
-                return multiplied.map { abs($0) } + [Double(constant)]
+                let integers = multiplied.map { abs(Int($0.rounded())) }
+                let divisor = integers.reduce(0, greatestCommonDivisor)
+                guard divisor > 0 else { return [] }
+                return integers.map { Double($0 / divisor) }
             }
         }
         return []
+    }
+
+    private func greatestCommonDivisor(_ lhs: Int, _ rhs: Int) -> Int {
+        var a = abs(lhs)
+        var b = abs(rhs)
+        while b != 0 {
+            (a, b) = (b, a % b)
+        }
+        return a
     }
 }

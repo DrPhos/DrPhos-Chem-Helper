@@ -49,7 +49,7 @@ struct StoichiometryView:View{
                 Button(action: {
                     showCompoundEntry = true
                 }) {
-                    Text(compoundFormula.isEmpty ? "compound" : compoundFormula)
+                    Text(compoundFormula.isEmpty ? "compound" : ChemicalFormulaFormatter.format(compoundFormula))
                         .foregroundColor(compoundFormula.isEmpty ? .gray : .primary)
                         .frame(maxWidth: 175)
                         .padding(.vertical, 8)
@@ -217,7 +217,7 @@ struct CompoundView:View{
                                     .accentColor(.phosred1)
                                     .padding(.leading,-10)
                                     
-                                    Text(compounds[index].formula)
+                                    Text(ChemicalFormulaFormatter.format(compounds[index].formula))
                                         .padding(.leading,-15)
                                 }
                                 if inputMode == .grams{
@@ -415,7 +415,7 @@ struct CompoundView:View{
                                     .pickerStyle(MenuPickerStyle())
                                     .accentColor(.phosred1)
                                     .padding(.leading,-10)
-                                    Text(compounds[index].formula)
+                                    Text(ChemicalFormulaFormatter.format(compounds[index].formula))
                                         .padding(.leading,-15)
                                 }
                                 if inputMode == .grams{

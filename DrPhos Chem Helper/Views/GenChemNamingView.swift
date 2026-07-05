@@ -1022,20 +1022,7 @@ struct TextFormatFormula: View {
     let parsedFormula: String
 
     var body: some View {
-        HStack(spacing: 0) {
-            ForEach(Array(parsedFormula.enumerated()), id: \.offset) { index, character in
-                if let number = Int(String(character)), number == 1 {
-                    // Omit digit 1
-                } else if let number = Int(String(character)), (0...9).contains(number) {
-                    Text("\(number)")
-                        .font(.subheadline)
-                        .baselineOffset(-5)
-                } else {
-                    // Display normal text for other characters
-                    Text(String(character))
-                }
-            }
-        }
+        Text(ChemicalFormulaFormatter.format(parsedFormula, omittingOnes: true))
     }
 }
 

@@ -23,10 +23,7 @@ struct SigFigView: View {
     @State private var zeroRules: [String] = []  // Not significant zero rules
     @State private var significantZeroRules: [String] = [] // Significant zero rules
     @State private var inputError: String? = nil
-    enum Field: Hashable {
-        case input
-    }
-    @FocusState private var focusedField: Field?
+    @State private var isKeypadActive = false
     
     var body: some View {
         
@@ -36,14 +33,23 @@ struct SigFigView: View {
             
             VStack {
                 HStack {
-                    // TextField in the middle with onChange
-                    TextField("Enter a number", text: $inputText)
-                        .keyboardType(.decimalPad)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                    Button {
+                        isKeypadActive = true
+                    } label: {
+                        Text(inputText.isEmpty ? "Enter a number" : inputText)
+                            .font(.body.monospacedDigit())
+                            .foregroundStyle(inputText.isEmpty ? .secondary : .primary)
+                            .frame(maxWidth: .infinity, minHeight: 44)
+                            .background(.background, in: RoundedRectangle(cornerRadius: 7))
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 7)
+                                    .stroke(isKeypadActive ? Color.accentColor : Color.secondary.opacity(0.35), lineWidth: 1.5)
+                            }
+                            .contentShape(Rectangle())
+                    }
+                        .buttonStyle(.plain)
                         .frame(minWidth: 100)
-                        .multilineTextAlignment(.center)
                         .padding(.vertical, 4)
-                        .focused($focusedField, equals: .input)
                         .onChange(of: inputText) {
                             if inputText.filter({ $0 == "." }).count > 1 {
                                 inputError = "Invalid input: too many decimal points"
@@ -105,9 +111,6 @@ struct SigFigView: View {
                         .foregroundColor(.phosred1)
                         .font(.footnote)
                 }
-                
-                NumbersView(compoundFormula: $inputText)
-                NumbersSecondRowView(compoundFormula: $inputText)
                 
             }
             
@@ -217,16 +220,22 @@ struct SigFigView: View {
             
         }
         .padding([.leading, .trailing, .bottom])
-        .gesture(
-            TapGesture().onEnded {
-                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-            }
-        )
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                CustomKeyboardToolbar(activeField: .constant($inputText))
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if isKeypadActive {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Enter number")
+                        .font(.headline)
+                    CustomNumericKeypad(value: $inputText, isActive: $isKeypadActive)
+                }
+                .frame(maxWidth: 680)
+                .padding()
+                .background(.regularMaterial)
+                .overlay(alignment: .top) { Divider() }
+                .shadow(color: .black.opacity(0.12), radius: 8, y: -2)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
+        .animation(.easeInOut(duration: 0.18), value: isKeypadActive)
     }
 
     /// Returns a tuple with answer text, colored AttributedString, not significant zero rules, and significant zero rules

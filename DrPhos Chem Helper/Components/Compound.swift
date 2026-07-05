@@ -231,6 +231,46 @@ class CompoundsViewModel:ObservableObject{
         }
     }
 
+    @discardableResult
+    func prepareEnteredAmountsForStoichiometry() -> Bool {
+        var updatedCompounds = compounds
+        var knownAmountCount = 0
+
+        for index in updatedCompounds.indices {
+            let compound = updatedCompounds[index]
+            let gramsText = compound.enteredGrams.trimmingCharacters(in: .whitespacesAndNewlines)
+            let molesText = compound.enteredMoles.trimmingCharacters(in: .whitespacesAndNewlines)
+            let grams = Double(gramsText)
+            let moles = Double(molesText)
+
+            let hasGrams = !gramsText.isEmpty
+            let hasMoles = !molesText.isEmpty
+            guard !(hasGrams && hasMoles),
+                  !hasGrams || (grams?.isFinite == true && (grams ?? 0) > 0),
+                  !hasMoles || (moles?.isFinite == true && (moles ?? 0) > 0),
+                  compound.molarMass.isFinite,
+                  compound.molarMass > 0 else {
+                return false
+            }
+
+            if let grams, hasGrams {
+                let convertedMoles = grams / compound.molarMass
+                guard convertedMoles.isFinite else { return false }
+                updatedCompounds[index].enteredMoles = String(convertedMoles)
+                knownAmountCount += 1
+            } else if let moles, hasMoles {
+                let convertedGrams = moles * compound.molarMass
+                guard convertedGrams.isFinite else { return false }
+                updatedCompounds[index].enteredGrams = String(convertedGrams)
+                knownAmountCount += 1
+            }
+        }
+
+        guard knownAmountCount > 0 else { return false }
+        compounds = updatedCompounds
+        return true
+    }
+
     func clearEnteredAndCalculatedValues(){
         var updatedCompounds = compounds
         guard resetAmounts(in: &updatedCompounds) else { return }

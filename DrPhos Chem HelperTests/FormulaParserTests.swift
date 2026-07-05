@@ -2,6 +2,25 @@ import XCTest
 @testable import DrPhos_Chem_Helper
 
 final class FormulaParserTests: XCTestCase {
+    func testBalancerHandlesTwoReactantsAndThreeProducts() {
+        let values = ReactionBalancingEngine().solve(
+            "C1Na2O3+Cl1H1=H2O1+C1O2+Cl1Na1"
+        )
+        let coefficients = ReactionBalancingEngine()
+            .integerCoefficients(from: values)
+            .map(\.value)
+
+        XCTAssertEqual(coefficients, [1, 2, 1, 1, 2])
+    }
+
+    func testChemicalFormulaDisplayFormatting() {
+        XCTAssertEqual(ChemicalFormulaFormatter.format("H2O"), "H₂O")
+        XCTAssertEqual(ChemicalFormulaFormatter.format("Na2O"), "Na₂O")
+        XCTAssertEqual(ChemicalFormulaFormatter.format("NaNO3"), "NaNO₃")
+        XCTAssertEqual(ChemicalFormulaFormatter.format("Ca(NO3)2"), "Ca(NO₃)₂")
+        XCTAssertEqual(ChemicalFormulaFormatter.format("Al2(SO4)3"), "Al₂(SO₄)₃")
+    }
+
     func testEmptyFormulaIsValid() {
         let result = FormulaParser.parse("")
 
@@ -161,6 +180,54 @@ final class NumericInputEditorTests: XCTestCase {
 
     func testSignCanBeRemoved() {
         XCTAssertEqual(NumericInputEditor.togglingSign(of: "-2.5"), "2.5")
+    }
+}
+
+final class CustomNumericInputEditorTests: XCTestCase {
+    func testBuildsDecimalValue() {
+        var value = ""
+        for digit: Character in "12" {
+            value = CustomNumericInputEditor.appendingDigit(digit, to: value)
+        }
+        value = CustomNumericInputEditor.appendingDecimal(to: value)
+        value = CustomNumericInputEditor.appendingDigit("5", to: value)
+        XCTAssertEqual(value, "12.5")
+    }
+
+    func testOnlyOneMantissaDecimalIsAllowed() {
+        XCTAssertEqual(CustomNumericInputEditor.appendingDecimal(to: "12.5"), "12.5")
+        XCTAssertEqual(CustomNumericInputEditor.appendingDecimal(to: "1e2"), "1e2")
+    }
+
+    func testSignTogglesMantissaBeforeExponent() {
+        XCTAssertEqual(CustomNumericInputEditor.togglingSign(of: "12.5"), "-12.5")
+        XCTAssertEqual(CustomNumericInputEditor.togglingSign(of: "-12.5"), "12.5")
+    }
+
+    func testExponentMarkerIsInsertedOnce() {
+        XCTAssertEqual(CustomNumericInputEditor.insertingExponentMarker(in: "6.02"), "6.02e")
+        XCTAssertEqual(CustomNumericInputEditor.insertingExponentMarker(in: "6.02e"), "6.02e")
+        XCTAssertEqual(CustomNumericInputEditor.insertingExponentMarker(in: ""), "")
+    }
+
+    func testSignTogglesExponentAfterMarker() {
+        XCTAssertEqual(CustomNumericInputEditor.togglingSign(of: "1.2e"), "1.2e-")
+        XCTAssertEqual(CustomNumericInputEditor.togglingSign(of: "1.2e-4"), "1.2e4")
+    }
+
+    func testDeleteWorksThroughScientificNotation() {
+        var value = "6.02e23"
+        value = CustomNumericInputEditor.deletingLastCharacter(from: value)
+        XCTAssertEqual(value, "6.02e2")
+        value = CustomNumericInputEditor.deletingLastCharacter(from: value)
+        value = CustomNumericInputEditor.deletingLastCharacter(from: value)
+        XCTAssertEqual(value, "6.02")
+    }
+
+    func testFiniteScientificNotationParses() {
+        XCTAssertEqual(CustomNumericInputEditor.parsedFiniteValue(from: "6.02e23"), 6.02e23)
+        XCTAssertEqual(CustomNumericInputEditor.parsedFiniteValue(from: "-1.2e-4"), -1.2e-4)
+        XCTAssertNil(CustomNumericInputEditor.parsedFiniteValue(from: "1e9999"))
     }
 }
 

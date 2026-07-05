@@ -639,29 +639,9 @@ struct CustomTextWithBaselineOffset1: View {
     }
     
     var body: some View {
-        let regex = try! NSRegularExpression(pattern: "[0-9]+")
-        let matches = regex.matches(in: text, range: NSRange(text.startIndex..., in: text))
-        var currentIndex = text.startIndex
-        var views: [Text] = []
-        for match in matches {
-            let range = Range(match.range, in: text)!
-            let prefix = text[currentIndex..<range.lowerBound]
-            let matchedSubstring = text[range]
-            currentIndex = range.upperBound
-            if !prefix.isEmpty {
-                views.append(Text(prefix))
-            }
-            views.append(Text(matchedSubstring).baselineOffset(-10).foregroundColor(.phostext).font(.subheadline))
-        }
-        if currentIndex < text.endIndex {
-            let remainingSuffix = text[currentIndex..<text.endIndex]
-            views.append(Text(remainingSuffix))
-        }
-        return HStack(spacing: 0) {
-            ForEach(views.indices, id: \.self) { index in
-                views[index].font(.headline).foregroundColor(.phostext)
-            }
-        }
+        Text(ChemicalFormulaFormatter.format(text))
+            .font(.headline)
+            .foregroundColor(.phostext)
     }
 }
 
@@ -687,33 +667,17 @@ struct FormattedTextView1: View {
     }
     
     func formatText(_ inputText: String) -> Text {
-        let regexPattern = #"(\d+)"#
-        do {
-            let regex = try NSRegularExpression(pattern: regexPattern, options: [])
-            let range = NSRange(location: 0, length: inputText.utf16.count)
-            var formattedText = Text("")
-            var currentIndex = inputText.startIndex
-            for (index, match) in regex.matches(in: inputText, options: [], range: range).enumerated() {
-                let matchRange = Range(match.range, in: inputText)!
-                formattedText = formattedText + Text(inputText[currentIndex..<matchRange.lowerBound])
-                    .font(.headline)
-                let number = String(inputText[matchRange])
-                if index == 0 {
-                    formattedText = formattedText + Text(number).foregroundColor(.green).bold()
-                        .font(.headline)
-                } else {
-                    formattedText = formattedText.baselineOffset(-1) + Text(number).baselineOffset(-5)
-                        .font(.subheadline)
-                }
-                currentIndex = matchRange.upperBound
-            }
-            formattedText = formattedText + Text(inputText[currentIndex..<inputText.endIndex])
-                .font(.headline)
-            return formattedText
-        } catch {
-            print("Error creating regex: \(error.localizedDescription)")
+        let parts = inputText.split(separator: " ", maxSplits: 1, omittingEmptySubsequences: true)
+        guard parts.count == 2 else {
+            return Text(ChemicalFormulaFormatter.format(inputText))
         }
-        return Text(inputText)
+
+        return Text(String(parts[0]))
+            .foregroundColor(.green)
+            .bold()
+            .font(.headline)
+            + Text(" " + ChemicalFormulaFormatter.format(String(parts[1])))
+            .font(.headline)
     }
 }
 

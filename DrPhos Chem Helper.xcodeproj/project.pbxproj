@@ -44,7 +44,10 @@
 		A20000112F00000100000001 /* ReactionBalancingEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000122F00000100000001 /* ReactionBalancingEngine.swift */; };
 		A20000212F00000100000001 /* StoichiometryEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000222F00000100000001 /* StoichiometryEngine.swift */; };
 		A20000312F00000100000001 /* CombinedReactionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000322F00000100000001 /* CombinedReactionView.swift */; };
+		A20000412F00000100000001 /* ChemicalFormulaFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000422F00000100000001 /* ChemicalFormulaFormatter.swift */; };
 		A10000012F00000100000001 /* FormulaParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000022F00000100000001 /* FormulaParserTests.swift */; };
+		A20000512F00000100000001 /* ChemistryEngineRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000522F00000100000001 /* ChemistryEngineRegressionTests.swift */; };
+		A20000612F00000100000001 /* CustomNumericKeypad.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000622F00000100000001 /* CustomNumericKeypad.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -96,7 +99,10 @@
 		A20000122F00000100000001 /* ReactionBalancingEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionBalancingEngine.swift; sourceTree = "<group>"; };
 		A20000222F00000100000001 /* StoichiometryEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoichiometryEngine.swift; sourceTree = "<group>"; };
 		A20000322F00000100000001 /* CombinedReactionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CombinedReactionView.swift; sourceTree = "<group>"; };
+		A20000422F00000100000001 /* ChemicalFormulaFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChemicalFormulaFormatter.swift; sourceTree = "<group>"; };
 		A10000022F00000100000001 /* FormulaParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormulaParserTests.swift; sourceTree = "<group>"; };
+		A20000522F00000100000001 /* ChemistryEngineRegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChemistryEngineRegressionTests.swift; sourceTree = "<group>"; };
+		A20000622F00000100000001 /* CustomNumericKeypad.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomNumericKeypad.swift; sourceTree = "<group>"; };
 		A10000042F00000100000001 /* DrPhos Chem HelperTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "DrPhos Chem HelperTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -134,6 +140,8 @@
 		6B0448AF2E368AE800DFF4DF /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				A20000622F00000100000001 /* CustomNumericKeypad.swift */,
+				A20000422F00000100000001 /* ChemicalFormulaFormatter.swift */,
 				A10000122F00000100000001 /* ChemistryCalculations.swift */,
 				A20000122F00000100000001 /* ReactionBalancingEngine.swift */,
 				A20000222F00000100000001 /* StoichiometryEngine.swift */,
@@ -207,6 +215,7 @@
 		A10000062F00000100000001 /* DrPhos Chem HelperTests */ = {
 			isa = PBXGroup;
 			children = (
+				A20000522F00000100000001 /* ChemistryEngineRegressionTests.swift */,
 				A10000022F00000100000001 /* FormulaParserTests.swift */,
 			);
 			path = "DrPhos Chem HelperTests";
@@ -312,9 +321,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A20000612F00000100000001 /* CustomNumericKeypad.swift in Sources */,
 				A20000112F00000100000001 /* ReactionBalancingEngine.swift in Sources */,
 				A20000212F00000100000001 /* StoichiometryEngine.swift in Sources */,
 				A20000312F00000100000001 /* CombinedReactionView.swift in Sources */,
+				A20000412F00000100000001 /* ChemicalFormulaFormatter.swift in Sources */,
 				A10000312F00000100000001 /* DrPhosCalculatorComponents.swift in Sources */,
 				A10000112F00000100000001 /* ChemistryCalculations.swift in Sources */,
 				A10000212F00000100000001 /* ToolAccess.swift in Sources */,
@@ -354,6 +365,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A20000512F00000100000001 /* ChemistryEngineRegressionTests.swift in Sources */,
 				A10000012F00000100000001 /* FormulaParserTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

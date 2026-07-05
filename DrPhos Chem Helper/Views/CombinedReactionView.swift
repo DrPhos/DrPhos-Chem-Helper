@@ -1,13 +1,47 @@
 import SwiftUI
+import Combine
+
+struct ReactionDraftV1: Codable {
+    static let currentVersion = 1
+
+    enum Stage: String, Codable {
+        case entering
+        case balanced
+        case calculated
+    }
+
+    struct DraftCompound: Codable {
+        let id: UUID
+        let formula: String
+        let molarMass: Double
+        let enteredGrams: String
+        let calculatedGrams: String
+        let excessGrams: String
+        let enteredMoles: String
+        let calculatedMoles: String
+        let excessMoles: String
+        let coefficient: Int
+        let isReactant: Bool
+        let parsedFormula: String
+        let isLimiting: Bool
+    }
+
+    let version: Int
+    let compounds: [DraftCompound]
+    let stage: Stage
+    let isBalanced: Bool
+}
 
 struct CombinedReactionView: View {
+    @AppStorage("reactionWorkflowDraft.v1") private var reactionDraftData: Data = Data()
     @StateObject private var compoundsModel = CompoundsViewModel()
     @State private var compoundFormula = ""
     @State private var entrySide: ReactionSide?
     @State private var stage: ReactionWorkflowStage = .entering
     @State private var balanceError: String?
     @State private var stoichiometryError: String?
-    @State private var isEditingAmount = false
+    @State private var activeAmountField: ReactionAmountField?
+    @State private var isRestoringDraft = false
 
     var body: some View {
         ScrollView {
@@ -43,10 +77,17 @@ struct CombinedReactionView: View {
                     removeCompound: compoundsModel.removeCompound
                 )
 
-                Button("Balance Reaction", action: balanceReaction)
-                    .buttonStyle(.borderedProminent)
-                    .tint(.seven)
-                    .disabled(!canBalance)
+                HStack {
+                    Button("Balance Reaction", action: balanceReaction)
+                        .buttonStyle(.borderedProminent)
+                        .tint(.seven)
+                        .disabled(!canBalance)
+
+                    if !compoundsModel.compounds.isEmpty {
+                        Button("Clear Reaction", role: .destructive, action: clearReaction)
+                            .buttonStyle(.bordered)
+                    }
+                }
 
                 if let balanceError {
                     Text(balanceError)
@@ -61,7 +102,7 @@ struct CombinedReactionView: View {
                     StoichiometryWorkflowSection(
                         compoundsModel: compoundsModel,
                         calculationComplete: stage == .calculated,
-                        isEditingAmount: $isEditingAmount,
+                        activeAmountField: $activeAmountField,
                         errorMessage: stoichiometryError,
                         calculate: calculateStoichiometry,
                         clearAmounts: clearAmounts
@@ -86,7 +127,21 @@ struct CombinedReactionView: View {
             guard oldValue != newValue else { return }
             invalidateBalance()
         }
+        .onReceive(compoundsModel.$compounds.dropFirst()) { _ in
+            saveDraft()
+        }
+        .onChange(of: stage) { _, _ in
+            saveDraft()
+        }
+        .onAppear(perform: restoreDraft)
         .animation(.easeInOut(duration: 0.25), value: stage)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if let activeAmountField, stage != .entering {
+                reactionAmountKeypad(for: activeAmountField)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.easeInOut(duration: 0.18), value: activeAmountField)
     }
 
     private var canBalance: Bool {
@@ -129,50 +184,159 @@ struct CombinedReactionView: View {
     }
 
     private func invalidateBalance() {
+        guard !isRestoringDraft else { return }
         guard stage != .entering || balanceError != nil else { return }
         compoundsModel.clearEnteredAndCalculatedValues()
         balanceError = nil
         stoichiometryError = nil
-        isEditingAmount = false
+        activeAmountField = nil
         stage = .entering
     }
 
     private func calculateStoichiometry() {
-        let knownAmounts = compoundsModel.compounds.flatMap { compound -> [StoichiometryAmountKind] in
-            var kinds: [StoichiometryAmountKind] = []
-            if let grams = Double(compound.enteredGrams), grams.isFinite, grams > 0 {
-                kinds.append(.grams)
-            }
-            if let moles = Double(compound.enteredMoles), moles.isFinite, moles > 0 {
-                kinds.append(.moles)
-            }
-            return kinds
-        }
-
-        guard knownAmounts.count == 1, let inputKind = knownAmounts.first else {
-            stoichiometryError = "Enter exactly one known amount in either grams or moles."
+        guard compoundsModel.prepareEnteredAmountsForStoichiometry() else {
+            stoichiometryError = "Enter one or more positive amounts. Use either grams or moles for each compound."
             return
         }
-
-        let inputMode: StoichiometryView.InputMode = inputKind == .grams ? .grams : .moles
-        compoundsModel.recordEnteredAmounts(inputMode: inputMode)
         guard compoundsModel.calculateStoichiometry() else {
             stoichiometryError = "Enter a positive known amount before calculating."
             return
         }
 
         stoichiometryError = nil
-        isEditingAmount = false
-        UIApplication.shared.endEditing()
+        activeAmountField = nil
         stage = .calculated
     }
 
     private func clearAmounts() {
         compoundsModel.clearEnteredAndCalculatedValues()
         stoichiometryError = nil
-        isEditingAmount = false
-        UIApplication.shared.endEditing()
+        activeAmountField = nil
         stage = .balanced
+    }
+
+    private func clearReaction() {
+        compoundsModel.clearCompounds()
+        compoundFormula = ""
+        entrySide = nil
+        stage = .entering
+        balanceError = nil
+        stoichiometryError = nil
+        activeAmountField = nil
+        reactionDraftData = Data()
+        UIApplication.shared.endEditing()
+    }
+
+    private func reactionAmountKeypad(for field: ReactionAmountField) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Editing \(field.kind.label) for \(formula(for: field.compoundID))")
+                .font(.headline)
+
+            CustomNumericKeypad(
+                value: reactionAmountBinding(for: field, in: compoundsModel),
+                isActive: Binding(
+                    get: { activeAmountField != nil },
+                    set: { if !$0 { activeAmountField = nil } }
+                )
+            )
+            .id(field)
+        }
+        .frame(maxWidth: 680)
+        .padding()
+        .background(.regularMaterial)
+        .overlay(alignment: .top) { Divider() }
+        .shadow(color: .black.opacity(0.12), radius: 8, y: -2)
+    }
+
+    private func formula(for compoundID: UUID) -> String {
+        compoundsModel.compounds.first(where: { $0.id == compoundID })?.formula ?? "compound"
+    }
+
+    private func saveDraft() {
+        guard !isRestoringDraft else { return }
+        guard !compoundsModel.compounds.isEmpty else {
+            reactionDraftData = Data()
+            return
+        }
+
+        let draft = ReactionDraftV1(
+            version: ReactionDraftV1.currentVersion,
+            compounds: compoundsModel.compounds.map { compound in
+                ReactionDraftV1.DraftCompound(
+                    id: compound.id,
+                    formula: compound.formula,
+                    molarMass: compound.molarMass,
+                    enteredGrams: compound.enteredGrams,
+                    calculatedGrams: compound.calculatedGrams,
+                    excessGrams: compound.excessGrams,
+                    enteredMoles: compound.enteredMoles,
+                    calculatedMoles: compound.calculatedMoles,
+                    excessMoles: compound.excessMoles,
+                    coefficient: compound.coefficient,
+                    isReactant: compound.isReactant,
+                    parsedFormula: compound.parsedFormula,
+                    isLimiting: compound.isLimiting
+                )
+            },
+            stage: draftStage,
+            isBalanced: stage != .entering
+        )
+
+        if let encoded = try? JSONEncoder().encode(draft) {
+            reactionDraftData = encoded
+        }
+    }
+
+    private func restoreDraft() {
+        guard compoundsModel.compounds.isEmpty,
+              !reactionDraftData.isEmpty,
+              let draft = try? JSONDecoder().decode(ReactionDraftV1.self, from: reactionDraftData),
+              draft.version == ReactionDraftV1.currentVersion,
+              !draft.compounds.isEmpty else {
+            return
+        }
+
+        isRestoringDraft = true
+        compoundsModel.compounds = draft.compounds.map { saved in
+            Compound(
+                id: saved.id,
+                formula: saved.formula,
+                molarMass: saved.molarMass,
+                enteredGrams: saved.enteredGrams,
+                calculatedGrams: saved.calculatedGrams,
+                excessGrams: saved.excessGrams,
+                enteredMoles: saved.enteredMoles,
+                calculatedMoles: saved.calculatedMoles,
+                excessMoles: saved.excessMoles,
+                coefficient: saved.coefficient,
+                isReactant: saved.isReactant,
+                parsedFormula: saved.parsedFormula,
+                isLimiting: saved.isLimiting
+            )
+        }
+
+        let restoredStage = workflowStage(for: draft)
+        DispatchQueue.main.async {
+            stage = restoredStage
+            isRestoringDraft = false
+        }
+    }
+
+    private var draftStage: ReactionDraftV1.Stage {
+        switch stage {
+        case .entering: return .entering
+        case .balanced: return .balanced
+        case .calculated: return .calculated
+        }
+    }
+
+    private func workflowStage(for draft: ReactionDraftV1) -> ReactionWorkflowStage {
+        guard draft.isBalanced else { return .entering }
+        switch draft.stage {
+        case .entering: return .entering
+        case .balanced: return .balanced
+        case .calculated: return .calculated
+        }
     }
 }
 
@@ -239,7 +403,7 @@ private struct ReactionSideRow: View {
                     HStack(spacing: 8) {
                         ForEach(compounds) { compound in
                             HStack(spacing: 8) {
-                                Text(compound.formula)
+                                Text(ChemicalFormulaFormatter.format(compound.formula))
                                     .font(.headline)
                                 Button {
                                     removeCompound(compound.id)
@@ -301,7 +465,7 @@ private struct BalancedReactionSection: View {
             HStack(spacing: 3) {
                 Text("\(compound.coefficient)")
                     .fontWeight(.semibold)
-                Text(compound.formula)
+                Text(ChemicalFormulaFormatter.format(compound.formula))
             }
             .font(.title3)
         }
@@ -311,7 +475,7 @@ private struct BalancedReactionSection: View {
 private struct StoichiometryWorkflowSection: View {
     @ObservedObject var compoundsModel: CompoundsViewModel
     let calculationComplete: Bool
-    @Binding var isEditingAmount: Bool
+    @Binding var activeAmountField: ReactionAmountField?
     let errorMessage: String?
     let calculate: () -> Void
     let clearAmounts: () -> Void
@@ -321,9 +485,9 @@ private struct StoichiometryWorkflowSection: View {
             Text("Step 3")
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
-            Text("Enter One Known Amount")
+            Text("Enter One or More Known Amounts")
                 .font(.title2.weight(.semibold))
-            Text("Use either grams or moles for one compound, then calculate the remaining amounts.")
+            Text("Use either grams or moles for each known compound. Multiple reactant amounts will determine the limiting reagent.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
 
@@ -331,22 +495,9 @@ private struct StoichiometryWorkflowSection: View {
                 ForEach(compoundsModel.compounds) { compound in
                     StoichiometryAmountRow(
                         compound: compound,
-                        grams: amountBinding(for: compound.id, kind: .grams),
-                        moles: amountBinding(for: compound.id, kind: .moles),
                         calculationComplete: calculationComplete,
-                        isEditingAmount: $isEditingAmount
+                        activeAmountField: $activeAmountField
                     )
-                }
-            }
-
-            if isEditingAmount {
-                HStack {
-                    Spacer()
-                    Button("Done") {
-                        isEditingAmount = false
-                        UIApplication.shared.endEditing()
-                    }
-                    .buttonStyle(.bordered)
                 }
             }
 
@@ -370,55 +521,17 @@ private struct StoichiometryWorkflowSection: View {
         .background(Color.phosblue1.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
     }
 
-    private func amountBinding(for compoundID: UUID, kind: StoichiometryAmountKind) -> Binding<String> {
-        Binding(
-            get: {
-                guard let compound = compoundsModel.compounds.first(where: { $0.id == compoundID }) else {
-                    return ""
-                }
-                return kind == .grams ? compound.enteredGrams : compound.enteredMoles
-            },
-            set: { newValue in
-                guard isValidAmountInput(newValue),
-                      let index = compoundsModel.compounds.firstIndex(where: { $0.id == compoundID }) else {
-                    return
-                }
-                switch kind {
-                case .grams:
-                    compoundsModel.compounds[index].enteredGrams = newValue
-                case .moles:
-                    compoundsModel.compounds[index].enteredMoles = newValue
-                }
-            }
-        )
-    }
-
-    private func isValidAmountInput(_ value: String) -> Bool {
-        if value.isEmpty { return true }
-        var decimalCount = 0
-        for character in value {
-            if character == "." {
-                decimalCount += 1
-                if decimalCount > 1 { return false }
-            } else if !character.isNumber {
-                return false
-            }
-        }
-        return true
-    }
 }
 
 private struct StoichiometryAmountRow: View {
     let compound: Compound
-    @Binding var grams: String
-    @Binding var moles: String
     let calculationComplete: Bool
-    @Binding var isEditingAmount: Bool
+    @Binding var activeAmountField: ReactionAmountField?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("\(compound.coefficient) \(compound.formula)")
+                Text("\(compound.coefficient) \(ChemicalFormulaFormatter.format(compound.formula))")
                     .font(.headline)
                 Spacer()
                 Text(String(format: "%.2f g/mol", compound.molarMass))
@@ -426,29 +539,99 @@ private struct StoichiometryAmountRow: View {
                     .foregroundStyle(.secondary)
             }
 
-            HStack {
-                TextField("grams", text: $grams, onEditingChanged: { isEditingAmount = $0 })
-                    .textFieldStyle(.roundedBorder)
-                    .keyboardType(.decimalPad)
-                    .disabled(calculationComplete)
-                Text("g")
-
-                TextField("moles", text: $moles, onEditingChanged: { isEditingAmount = $0 })
-                    .textFieldStyle(.roundedBorder)
-                    .keyboardType(.decimalPad)
-                    .disabled(calculationComplete)
-                Text("mol")
+            HStack(spacing: 12) {
+                amountButton(kind: .grams, value: compound.enteredGrams, unit: "g")
+                amountButton(kind: .moles, value: compound.enteredMoles, unit: "mol")
             }
 
             if calculationComplete {
                 Text("Calculated: \(compound.calculatedGrams) g • \(compound.calculatedMoles) mol")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
+
+                if compound.isReactant && compound.isLimiting {
+                    Label("Limiting reagent", systemImage: "checkmark.circle.fill")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(.green)
+                }
+
+                if compound.isReactant && (!compound.excessGrams.isEmpty || !compound.excessMoles.isEmpty) {
+                    Text("Excess remaining: \(compound.excessGrams) g • \(compound.excessMoles) mol")
+                        .font(.footnote)
+                        .foregroundStyle(.orange)
+                }
             }
         }
         .padding(12)
         .background(.background, in: RoundedRectangle(cornerRadius: 10))
     }
+
+    private func amountButton(kind: StoichiometryAmountKind, value: String, unit: String) -> some View {
+        let field = ReactionAmountField(compoundID: compound.id, kind: kind)
+        return Button {
+            activeAmountField = field
+        } label: {
+            HStack {
+                Text(value.isEmpty ? kind.label : value)
+                    .font(.body.monospacedDigit())
+                    .foregroundStyle(value.isEmpty ? .secondary : .primary)
+                Spacer(minLength: 6)
+                Text(unit)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.horizontal, 10)
+            .frame(maxWidth: .infinity, minHeight: 40)
+            .background(.background, in: RoundedRectangle(cornerRadius: 7))
+            .overlay {
+                RoundedRectangle(cornerRadius: 7)
+                    .stroke(activeAmountField == field ? Color.accentColor : Color.secondary.opacity(0.35), lineWidth: 1.5)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(calculationComplete)
+        .accessibilityLabel("\(kind.label) for \(compound.formula)")
+        .accessibilityValue(value.isEmpty ? "Empty" : value)
+    }
+}
+
+private struct ReactionAmountField: Hashable {
+    let compoundID: UUID
+    let kind: StoichiometryAmountKind
+}
+
+private extension StoichiometryAmountKind {
+    var label: String {
+        switch self {
+        case .grams: "grams"
+        case .moles: "moles"
+        }
+    }
+}
+
+private func reactionAmountBinding(
+    for field: ReactionAmountField,
+    in compoundsModel: CompoundsViewModel
+) -> Binding<String> {
+    Binding(
+        get: {
+            guard let compound = compoundsModel.compounds.first(where: { $0.id == field.compoundID }) else {
+                return ""
+            }
+            return field.kind == .grams ? compound.enteredGrams : compound.enteredMoles
+        },
+        set: { newValue in
+            guard let index = compoundsModel.compounds.firstIndex(where: { $0.id == field.compoundID }) else {
+                return
+            }
+            switch field.kind {
+            case .grams:
+                compoundsModel.compounds[index].enteredGrams = newValue
+            case .moles:
+                compoundsModel.compounds[index].enteredMoles = newValue
+            }
+        }
+    )
 }
 
 #Preview {

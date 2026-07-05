@@ -13,6 +13,7 @@ struct CompoundEntry: View {
     @Binding var isPresented: Bool
     @AppStorage("recentCompounds") private var recentCompoundsData: Data = Data()
     @State private var recentCompounds: [String] = []
+    @State private var showingClearRecentsConfirmation = false
     var onEnter: () -> Void = {}
 
     init(compoundFormula: Binding<String>, isPresented: Binding<Bool>, onEnter: @escaping () -> Void = {}) {
@@ -66,23 +67,34 @@ struct CompoundEntry: View {
                     .padding(.top, 10)
 
                 if !recentCompounds.isEmpty {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 10) {
-                            ForEach(recentCompounds, id: \.self) { compound in
-                                Button(action: {
-                                    compoundFormula = compound
-                                }) {
-                                    Text(compound)
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 6)
-                                        .background(Color.numbers)
-                                        .foregroundColor(.numberstext)
-                                        .cornerRadius(8)
-                                }
-                                .accessibilityLabel("Use recent entry \(compound)")
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("Recent Compounds")
+                                .font(.headline)
+                            Spacer()
+                            Button("Clear", role: .destructive) {
+                                showingClearRecentsConfirmation = true
                             }
                         }
-                        .padding(.horizontal)
+
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 10) {
+                                ForEach(recentCompounds, id: \.self) { compound in
+                                    Button(action: {
+                                        compoundFormula = compound
+                                    }) {
+                                        Text(compound)
+                                            .padding(.horizontal, 12)
+                                            .padding(.vertical, 6)
+                                            .background(Color.numbers)
+                                            .foregroundColor(.numberstext)
+                                            .cornerRadius(8)
+                                    }
+                                    .accessibilityLabel("Use recent entry \(compound)")
+                                }
+                            }
+                            .padding(.horizontal)
+                        }
                     }
                 }
             }
@@ -98,6 +110,19 @@ struct CompoundEntry: View {
                         isPresented = false
                     }
                 }
+            }
+            .confirmationDialog(
+                "Clear Recent Compounds?",
+                isPresented: $showingClearRecentsConfirmation,
+                titleVisibility: .visible
+            ) {
+                Button("Clear Recent Compounds", role: .destructive) {
+                    recentCompounds.removeAll()
+                    recentCompoundsData = Data()
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("This removes all saved recent compounds from this device.")
             }
         }
     }
