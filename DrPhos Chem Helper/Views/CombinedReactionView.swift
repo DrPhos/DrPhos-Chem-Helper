@@ -42,57 +42,50 @@ struct CombinedReactionView: View {
     @State private var stoichiometryError: String?
     @State private var activeAmountField: ReactionAmountField?
     @State private var isRestoringDraft = false
+    @State private var showingClearReactionConfirmation = false
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 20) {
+            VStack(spacing: AppTheme.sectionSpacing) {
                 DrPhosSectionHeader(title: "Reaction Workflow")
 
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Step 1")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                    Text("Enter the Reaction")
-                        .font(.title2.weight(.semibold))
-                    Text("Add every reactant and product before balancing.")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                WorkflowStepCard(
+                    step: 1,
+                    title: "Enter the Reaction",
+                    detail: "Add every reactant and product, then balance the equation.",
+                    status: stage == .entering ? .current : .complete
+                ) {
+                    ReactionCompoundList(
+                        compounds: compoundsModel.compounds,
+                        addReactant: { beginEntry(on: .reactant) },
+                        addProduct: { beginEntry(on: .product) },
+                        removeCompound: { id in
+                            withAnimation(.easeOut(duration: 0.16)) {
+                                compoundsModel.removeCompound(id: id)
+                            }
+                        }
+                    )
 
-                HStack(spacing: 12) {
-                    Button("Add Reactant") {
-                        beginEntry(on: .reactant)
+                    Button(action: balanceReaction) {
+                        Label("Balance Reaction", systemImage: "arrow.triangle.2.circlepath")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity, minHeight: 44)
                     }
                     .buttonStyle(.borderedProminent)
+                    .tint(.seven)
+                    .disabled(!canBalance)
 
-                    Button("Add Product") {
-                        beginEntry(on: .product)
+                    if let balanceError {
+                        WorkflowErrorMessage(message: balanceError)
                     }
-                    .buttonStyle(.borderedProminent)
-                }
-
-                ReactionCompoundList(
-                    compounds: compoundsModel.compounds,
-                    removeCompound: compoundsModel.removeCompound
-                )
-
-                HStack {
-                    Button("Balance Reaction", action: balanceReaction)
-                        .buttonStyle(.borderedProminent)
-                        .tint(.seven)
-                        .disabled(!canBalance)
 
                     if !compoundsModel.compounds.isEmpty {
-                        Button("Clear Reaction", role: .destructive, action: clearReaction)
-                            .buttonStyle(.bordered)
+                        Button("Start New Reaction", role: .destructive) {
+                            showingClearReactionConfirmation = true
+                        }
+                        .buttonStyle(.bordered)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
                     }
-                }
-
-                if let balanceError {
-                    Text(balanceError)
-                        .font(.callout)
-                        .foregroundStyle(.red)
                 }
 
                 if stage != .entering {
@@ -110,8 +103,8 @@ struct CombinedReactionView: View {
                     .transition(.move(edge: .top).combined(with: .opacity))
                 }
             }
-            .frame(maxWidth: 680)
-            .padding()
+            .frame(maxWidth: AppTheme.readableContentWidth)
+            .padding(AppTheme.screenPadding)
         }
         .sheet(item: $entrySide) { side in
             CompoundEntry(
@@ -134,7 +127,6 @@ struct CombinedReactionView: View {
             saveDraft()
         }
         .onAppear(perform: restoreDraft)
-        .animation(.easeInOut(duration: 0.25), value: stage)
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if let activeAmountField, stage != .entering {
                 reactionAmountKeypad(for: activeAmountField)
@@ -142,6 +134,16 @@ struct CombinedReactionView: View {
             }
         }
         .animation(.easeInOut(duration: 0.18), value: activeAmountField)
+        .confirmationDialog(
+            "Start a New Reaction?",
+            isPresented: $showingClearReactionConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Clear Current Reaction", role: .destructive, action: clearReaction)
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This removes the current reaction, amounts, results, and saved draft.")
+        }
     }
 
     private var canBalance: Bool {
@@ -161,11 +163,13 @@ struct CombinedReactionView: View {
     }
 
     private func addCompound(on side: ReactionSide) {
-        switch side {
-        case .reactant:
-            compoundsModel.addReactant(formula: compoundFormula)
-        case .product:
-            compoundsModel.addProduct(formula: compoundFormula)
+        withAnimation(.easeOut(duration: 0.16)) {
+            switch side {
+            case .reactant:
+                compoundsModel.addReactant(formula: compoundFormula)
+            case .product:
+                compoundsModel.addProduct(formula: compoundFormula)
+            }
         }
         compoundFormula = ""
     }
@@ -180,7 +184,9 @@ struct CombinedReactionView: View {
         compoundsModel.applyCoefficients(coefficients)
         balanceError = nil
         stoichiometryError = nil
-        stage = .balanced
+        withAnimation(.easeInOut(duration: 0.25)) {
+            stage = .balanced
+        }
     }
 
     private func invalidateBalance() {
@@ -190,7 +196,9 @@ struct CombinedReactionView: View {
         balanceError = nil
         stoichiometryError = nil
         activeAmountField = nil
-        stage = .entering
+        withAnimation(.easeInOut(duration: 0.2)) {
+            stage = .entering
+        }
     }
 
     private func calculateStoichiometry() {
@@ -205,47 +213,68 @@ struct CombinedReactionView: View {
 
         stoichiometryError = nil
         activeAmountField = nil
-        stage = .calculated
+        withAnimation(.easeInOut(duration: 0.22)) {
+            stage = .calculated
+        }
     }
 
     private func clearAmounts() {
         compoundsModel.clearEnteredAndCalculatedValues()
         stoichiometryError = nil
         activeAmountField = nil
-        stage = .balanced
+        withAnimation(.easeInOut(duration: 0.18)) {
+            stage = .balanced
+        }
     }
 
     private func clearReaction() {
-        compoundsModel.clearCompounds()
-        compoundFormula = ""
-        entrySide = nil
-        stage = .entering
-        balanceError = nil
-        stoichiometryError = nil
-        activeAmountField = nil
+        withAnimation(.easeInOut(duration: 0.2)) {
+            compoundsModel.clearCompounds()
+            compoundFormula = ""
+            entrySide = nil
+            stage = .entering
+            balanceError = nil
+            stoichiometryError = nil
+            activeAmountField = nil
+        }
         reactionDraftData = Data()
         UIApplication.shared.endEditing()
     }
 
     private func reactionAmountKeypad(for field: ReactionAmountField) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Editing \(field.kind.label) for \(formula(for: field.compoundID))")
-                .font(.headline)
+        let amount = reactionAmountBinding(for: field, in: compoundsModel)
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 12) {
+                Text("Editing \(field.kind.label) for \(ChemicalFormulaFormatter.format(formula(for: field.compoundID)))")
+                    .font(.headline)
+                Spacer()
+                Text(amount.wrappedValue.isEmpty ? "—" : amount.wrappedValue)
+                    .font(.headline.monospacedDigit())
+                    .foregroundStyle(amount.wrappedValue.isEmpty ? .secondary : .primary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
 
             CustomNumericKeypad(
-                value: reactionAmountBinding(for: field, in: compoundsModel),
+                value: amount,
                 isActive: Binding(
                     get: { activeAmountField != nil },
                     set: { if !$0 { activeAmountField = nil } }
-                )
+                ),
+                showsDisplay: false
             )
             .id(field)
         }
-        .frame(maxWidth: 680)
+        .frame(maxWidth: 560)
         .padding()
         .background(.regularMaterial)
-        .overlay(alignment: .top) { Divider() }
+        .clipShape(RoundedRectangle(cornerRadius: AppTheme.cornerRadius, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: AppTheme.cornerRadius)
+                .stroke(Color.secondary.opacity(0.2))
+        }
         .shadow(color: .black.opacity(0.12), radius: 8, y: -2)
+        .padding(.horizontal, 8)
     }
 
     private func formula(for compoundID: UUID) -> String {
@@ -346,6 +375,86 @@ private enum ReactionWorkflowStage: Equatable {
     case calculated
 }
 
+private enum WorkflowStepStatus {
+    case current
+    case complete
+}
+
+private struct WorkflowStepCard<Content: View>: View {
+    let step: Int
+    let title: String
+    let detail: String?
+    let status: WorkflowStepStatus
+    let content: Content
+
+    init(
+        step: Int,
+        title: String,
+        detail: String? = nil,
+        status: WorkflowStepStatus,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.step = step
+        self.title = title
+        self.detail = detail
+        self.status = status
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(alignment: .top, spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(status == .complete ? Color.green : Color.accentColor)
+                    if status == .complete {
+                        Image(systemName: "checkmark")
+                            .font(.caption.bold())
+                            .foregroundStyle(.white)
+                    } else {
+                        Text("\(step)")
+                            .font(.caption.bold())
+                            .foregroundStyle(.white)
+                    }
+                }
+                .frame(width: 28, height: 28)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Step \(step)")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                    Text(title)
+                        .font(.title2.weight(.semibold))
+                    if let detail {
+                        Text(detail)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+
+            content
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: AppTheme.cornerRadius))
+    }
+}
+
+private struct WorkflowErrorMessage: View {
+    let message: String
+
+    var body: some View {
+        Label(message, systemImage: "exclamationmark.triangle.fill")
+            .font(.callout)
+            .foregroundStyle(.red)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(10)
+            .background(Color.red.opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
+    }
+}
+
 private struct ReactionTermSignature: Equatable {
     let id: UUID
     let formula: String
@@ -361,6 +470,8 @@ private enum ReactionSide: String, Identifiable {
 
 private struct ReactionCompoundList: View {
     let compounds: [Compound]
+    let addReactant: () -> Void
+    let addProduct: () -> Void
     let removeCompound: (UUID) -> Void
 
     var body: some View {
@@ -368,6 +479,7 @@ private struct ReactionCompoundList: View {
             ReactionSideRow(
                 title: "Reactants",
                 compounds: compounds.filter(\.isReactant),
+                addCompound: addReactant,
                 removeCompound: removeCompound
             )
 
@@ -378,6 +490,7 @@ private struct ReactionCompoundList: View {
             ReactionSideRow(
                 title: "Products",
                 compounds: compounds.filter { !$0.isReactant },
+                addCompound: addProduct,
                 removeCompound: removeCompound
             )
         }
@@ -387,17 +500,28 @@ private struct ReactionCompoundList: View {
 private struct ReactionSideRow: View {
     let title: String
     let compounds: [Compound]
+    let addCompound: () -> Void
     let removeCompound: (UUID) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(.headline)
+            HStack {
+                Text(title)
+                    .font(.headline)
+                Spacer()
+                Button(action: addCompound) {
+                    Label("Add", systemImage: "plus")
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .accessibilityLabel("Add \(title.dropLast())")
+            }
 
             if compounds.isEmpty {
-                Text("None added")
+                Text("Add at least one \(title.dropLast().lowercased()).")
                     .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .font(.subheadline)
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
@@ -409,6 +533,8 @@ private struct ReactionSideRow: View {
                                     removeCompound(compound.id)
                                 } label: {
                                     Image(systemName: "minus.circle.fill")
+                                        .frame(width: 32, height: 32)
+                                        .contentShape(Rectangle())
                                 }
                                 .buttonStyle(.plain)
                                 .foregroundStyle(.red)
@@ -422,10 +548,10 @@ private struct ReactionSideRow: View {
                 }
             }
         }
-        .padding()
+        .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.phostext.opacity(0.45))
+                .stroke(Color.secondary.opacity(0.3))
         )
     }
 }
@@ -434,13 +560,12 @@ private struct BalancedReactionSection: View {
     let compounds: [Compound]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Step 2")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-            Text("Balanced Reaction")
-                .font(.title2.weight(.semibold))
-
+        WorkflowStepCard(
+            step: 2,
+            title: "Balanced Reaction",
+            detail: "Use these coefficients for the stoichiometry calculation.",
+            status: .complete
+        ) {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     equationTerms(compounds.filter(\.isReactant))
@@ -451,9 +576,6 @@ private struct BalancedReactionSection: View {
                 .padding(.vertical, 4)
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding()
-        .background(Color.seven.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
     }
 
     @ViewBuilder
@@ -479,86 +601,200 @@ private struct StoichiometryWorkflowSection: View {
     let errorMessage: String?
     let calculate: () -> Void
     let clearAmounts: () -> Void
+    @State private var displayedDecimalPlaces = 2
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text("Step 3")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-            Text("Enter One or More Known Amounts")
-                .font(.title2.weight(.semibold))
-            Text("Use either grams or moles for each known compound. Multiple reactant amounts will determine the limiting reagent.")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+        WorkflowStepCard(
+            step: 3,
+            title: calculationComplete ? "Stoichiometry Results" : "Enter Known Amounts",
+            detail: "Enter grams or moles for one or more compounds. Multiple reactants determine the limiting reagent.",
+            status: calculationComplete ? .complete : .current
+        ) {
+            AmountGroup(
+                title: "Reactants",
+                compounds: compoundsModel.compounds.filter(\.isReactant),
+                calculationComplete: calculationComplete,
+                displayedDecimalPlaces: displayedDecimalPlaces,
+                activeAmountField: $activeAmountField
+            )
+
+            AmountGroup(
+                title: "Products",
+                compounds: compoundsModel.compounds.filter { !$0.isReactant },
+                calculationComplete: calculationComplete,
+                displayedDecimalPlaces: displayedDecimalPlaces,
+                activeAmountField: $activeAmountField
+            )
+
+            if let errorMessage {
+                WorkflowErrorMessage(message: errorMessage)
+            }
 
             VStack(spacing: 10) {
-                ForEach(compoundsModel.compounds) { compound in
+                Button(action: calculate) {
+                    Label("Calculate Stoichiometry", systemImage: "equal.circle")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(calculationComplete)
+
+                HStack {
+                    if calculationComplete {
+                        decimalAdjustmentButtons
+                    }
+
+                    Spacer()
+
+                    Button("Clear Amounts", action: clearAmounts)
+                        .buttonStyle(.bordered)
+                }
+            }
+        }
+    }
+
+    private var decimalAdjustmentButtons: some View {
+        HStack(spacing: 4) {
+            Button {
+                if displayedDecimalPlaces < 6 {
+                    displayedDecimalPlaces += 1
+                }
+            } label: {
+                Image(systemName: "plus.circle")
+            }
+            .buttonStyle(.plain)
+            .disabled(displayedDecimalPlaces == 6)
+
+            Text("Decimals")
+                .font(.caption2)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
+
+            Button {
+                if displayedDecimalPlaces > 0 {
+                    displayedDecimalPlaces -= 1
+                }
+            } label: {
+                Image(systemName: "minus.circle")
+            }
+            .buttonStyle(.plain)
+            .disabled(displayedDecimalPlaces == 0)
+        }
+        .foregroundStyle(Color.numbers)
+    }
+
+}
+
+private struct AmountGroup: View {
+    let title: String
+    let compounds: [Compound]
+    let calculationComplete: Bool
+    let displayedDecimalPlaces: Int
+    @Binding var activeAmountField: ReactionAmountField?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.headline)
+
+            VStack(spacing: 8) {
+                ForEach(compounds) { compound in
                     StoichiometryAmountRow(
                         compound: compound,
                         calculationComplete: calculationComplete,
+                        displayedDecimalPlaces: displayedDecimalPlaces,
                         activeAmountField: $activeAmountField
                     )
                 }
             }
-
-            if let errorMessage {
-                Text(errorMessage)
-                    .font(.callout)
-                    .foregroundStyle(.red)
-            }
-
-            HStack {
-                Button("Calculate Stoichiometry", action: calculate)
-                    .buttonStyle(.borderedProminent)
-                    .disabled(calculationComplete)
-
-                Button("Clear Amounts", action: clearAmounts)
-                    .buttonStyle(.bordered)
-            }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding()
-        .background(Color.phosblue1.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
+        .padding(12)
+        .background(
+            (title == "Reactants" ? Color.orange : Color.blue).opacity(0.06),
+            in: RoundedRectangle(cornerRadius: 10)
+        )
     }
-
 }
 
 private struct StoichiometryAmountRow: View {
     let compound: Compound
     let calculationComplete: Bool
+    let displayedDecimalPlaces: Int
     @Binding var activeAmountField: ReactionAmountField?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text("\(compound.coefficient) \(ChemicalFormulaFormatter.format(compound.formula))")
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                Text("\(compound.coefficient)")
+                    .font(.headline.bold())
+                    .foregroundStyle(.black)
+                    .underline()
+
+                Text(ChemicalFormulaFormatter.format(compound.formula))
                     .font(.headline)
-                Spacer()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.65)
+                    .layoutPriority(1)
+
+                Spacer(minLength: 8)
+
                 Text(String(format: "%.2f g/mol", compound.molarMass))
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
             }
 
-            HStack(spacing: 12) {
-                amountButton(kind: .grams, value: compound.enteredGrams, unit: "g")
-                amountButton(kind: .moles, value: compound.enteredMoles, unit: "mol")
+            HStack(alignment: .top, spacing: 12) {
+                amountField(
+                    title: "Grams",
+                    kind: .grams,
+                    value: compound.enteredGrams
+                )
+                amountField(
+                    title: "Moles",
+                    kind: .moles,
+                    value: compound.enteredMoles
+                )
             }
 
             if calculationComplete {
-                Text("Calculated: \(compound.calculatedGrams) g • \(compound.calculatedMoles) mol")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                Divider()
 
-                if compound.isReactant && compound.isLimiting {
-                    Label("Limiting reagent", systemImage: "checkmark.circle.fill")
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(.green)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Calculated Amounts")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.primary)
+
+                    HStack(alignment: .top, spacing: 12) {
+                        resultField(
+                            title: "Grams",
+                            value: compound.calculatedGrams,
+                            unit: "g"
+                        )
+                        resultField(
+                            title: "Moles",
+                            value: compound.calculatedMoles,
+                            unit: "mol"
+                        )
+                    }
                 }
 
-                if compound.isReactant && (!compound.excessGrams.isEmpty || !compound.excessMoles.isEmpty) {
-                    Text("Excess remaining: \(compound.excessGrams) g • \(compound.excessMoles) mol")
-                        .font(.footnote)
-                        .foregroundStyle(.orange)
+                VStack(alignment: .leading, spacing: 6) {
+                    if compound.isReactant && compound.isLimiting {
+                        resultBadge(
+                            "Limiting: \(formattedResult(compound.enteredGrams)) g / \(formattedResult(compound.enteredMoles)) mol",
+                            systemImage: "checkmark.circle.fill",
+                            color: .green
+                        )
+                    }
+                    if compound.isReactant && (!compound.excessGrams.isEmpty || !compound.excessMoles.isEmpty) {
+                        resultBadge(
+                            "Excess: \(formattedResult(compound.excessGrams)) g / \(formattedResult(compound.excessMoles)) mol",
+                            systemImage: "arrow.down.circle.fill",
+                            color: .orange
+                        )
+                    }
                 }
             }
         }
@@ -566,19 +802,30 @@ private struct StoichiometryAmountRow: View {
         .background(.background, in: RoundedRectangle(cornerRadius: 10))
     }
 
-    private func amountButton(kind: StoichiometryAmountKind, value: String, unit: String) -> some View {
+    private func amountField(
+        title: String,
+        kind: StoichiometryAmountKind,
+        value: String
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text(title)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+            amountButton(kind: kind, value: value)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func amountButton(kind: StoichiometryAmountKind, value: String) -> some View {
         let field = ReactionAmountField(compoundID: compound.id, kind: kind)
         return Button {
             activeAmountField = field
         } label: {
-            HStack {
-                Text(value.isEmpty ? kind.label : value)
+            Text(displayedAmount(value))
                     .font(.body.monospacedDigit())
                     .foregroundStyle(value.isEmpty ? .secondary : .primary)
-                Spacer(minLength: 6)
-                Text(unit)
-                    .foregroundStyle(.secondary)
-            }
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.65)
             .padding(.horizontal, 10)
             .frame(maxWidth: .infinity, minHeight: 40)
             .background(.background, in: RoundedRectangle(cornerRadius: 7))
@@ -592,6 +839,40 @@ private struct StoichiometryAmountRow: View {
         .disabled(calculationComplete)
         .accessibilityLabel("\(kind.label) for \(compound.formula)")
         .accessibilityValue(value.isEmpty ? "Empty" : value)
+    }
+
+    private func displayedAmount(_ value: String) -> String {
+        guard !value.isEmpty else { return "Enter" }
+        guard calculationComplete else { return value }
+        return formattedResult(value)
+    }
+
+    private func resultField(title: String, value: String, unit: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+            Text(value.isEmpty ? "—" : "\(formattedResult(value)) \(unit)")
+                .font(.footnote.weight(.semibold).monospacedDigit())
+                .foregroundStyle(.primary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func formattedResult(_ value: String) -> String {
+        guard let number = Double(value), number.isFinite else { return "—" }
+        return String(format: "%.*f", displayedDecimalPlaces, number)
+    }
+
+    private func resultBadge(_ title: String, systemImage: String, color: Color) -> some View {
+        Label(title, systemImage: systemImage)
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(color)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 5)
+            .background(color.opacity(0.1), in: Capsule())
     }
 }
 

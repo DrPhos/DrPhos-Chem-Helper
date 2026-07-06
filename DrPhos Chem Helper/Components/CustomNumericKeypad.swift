@@ -54,31 +54,34 @@ enum CustomNumericInputEditor {
 struct CustomNumericKeypad: View {
     @Binding var value: String
     @Binding var isActive: Bool
+    var showsDisplay = true
 
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 10), count: 4)
 
     var body: some View {
         VStack(spacing: 12) {
-            Button {
-                isActive = true
-            } label: {
-                HStack {
-                    Text(value.isEmpty ? "Tap to enter a value" : value)
-                        .foregroundStyle(value.isEmpty ? .secondary : .primary)
-                    Spacer()
+            if showsDisplay {
+                Button {
+                    isActive = true
+                } label: {
+                    HStack {
+                        Text(value.isEmpty ? "Tap to enter a value" : value)
+                            .foregroundStyle(value.isEmpty ? .secondary : .primary)
+                        Spacer()
+                    }
+                    .font(.title2.monospacedDigit())
+                    .padding()
+                    .frame(maxWidth: .infinity, minHeight: 54)
+                    .background(.background, in: RoundedRectangle(cornerRadius: 10))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(isActive ? Color.accentColor : Color.secondary.opacity(0.35), lineWidth: 1.5)
+                    }
                 }
-                .font(.title2.monospacedDigit())
-                .padding()
-                .frame(maxWidth: .infinity, minHeight: 54)
-                .background(.background, in: RoundedRectangle(cornerRadius: 10))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(isActive ? Color.accentColor : Color.secondary.opacity(0.35), lineWidth: 1.5)
-                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Numeric value")
+                .accessibilityValue(value.isEmpty ? "Empty" : value)
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Numeric value")
-            .accessibilityValue(value.isEmpty ? "Empty" : value)
 
             if isActive {
                 LazyVGrid(columns: columns, spacing: 10) {
