@@ -6,7 +6,7 @@ enum ToolID: String, CaseIterable, Identifiable, Codable {
     case molarMass = "Molar Mass Calculator"
     case ionic = "Ionic Compound Builder"
     case naming = "Naming Compounds"
-    case combinedReaction = "Reaction Workflow"
+    case combinedReaction = "Reaction Solver"
     case balancer = "Reaction Balancer"
     case stoichiometry = "Stoichiometry"
     case solutions = "Solution Concentrations"
@@ -15,6 +15,10 @@ enum ToolID: String, CaseIterable, Identifiable, Codable {
     case quadratic = "Quadratic Solver"
 
     var id: String { rawValue }
+
+    var isVisibleInNavigation: Bool {
+        self != .balancer && self != .stoichiometry
+    }
 
     var category: ToolCategory {
         switch self {

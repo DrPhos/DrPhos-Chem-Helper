@@ -47,7 +47,13 @@ struct CombinedReactionView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: AppTheme.sectionSpacing) {
-                DrPhosSectionHeader(title: "Reaction Workflow")
+                VStack(spacing: 4) {
+                    DrPhosSectionHeader(title: "Reaction Solver")
+                    Text("Balance reactions and calculate stoichiometry.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
 
                 WorkflowStepCard(
                     step: 1,

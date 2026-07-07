@@ -76,7 +76,7 @@ class KineticsNumbersViewModel: ObservableObject {
             printNumbers()
             
             errorMessage = nil
-            
+
             let enteredValuesCount = [
                             kineticsNumber.rateConstantEntered,
                             kineticsNumber.initialConcEntered,
@@ -93,7 +93,7 @@ class KineticsNumbersViewModel: ObservableObject {
                             errorMessage = "the final concentration must be\nless than the initial concentration"
                             return
                         }
-            
+
             let enteredValues = [
                 kineticsNumber.rateConstantEntered.isEmpty ? nil : "rateConstant",
                 kineticsNumber.initialConcEntered.isEmpty ? nil : "initialConc",
@@ -105,15 +105,18 @@ class KineticsNumbersViewModel: ObservableObject {
                 print("exactly 3 values must be entered")
                 return
             }
-            
-            if !kineticsNumber.rateConstantEntered.isEmpty && !kineticsNumber.initialConcEntered.isEmpty && !kineticsNumber.finalConcEntered.isEmpty {
-                performCalculation(for: &kineticsNumber, calculationType: .time)
-            } else if !kineticsNumber.rateConstantEntered.isEmpty && !kineticsNumber.initialConcEntered.isEmpty && !kineticsNumber.timeEntered.isEmpty {
-                performCalculation(for: &kineticsNumber, calculationType: .finalConc)
-            } else if !kineticsNumber.rateConstantEntered.isEmpty && !kineticsNumber.finalConcEntered.isEmpty && !kineticsNumber.timeEntered.isEmpty {
-                performCalculation(for: &kineticsNumber, calculationType: .initialConc)
-            } else if !kineticsNumber.initialConcEntered.isEmpty && !kineticsNumber.finalConcEntered.isEmpty && !kineticsNumber.timeEntered.isEmpty {
-                performCalculation(for: &kineticsNumber, calculationType: .rateConstant)
+
+            guard let input = engineInput(for: kineticsNumber, enteredValues: enteredValues) else {
+                errorMessage = "Unsupported reaction order or time unit."
+                return
+            }
+
+            switch KineticsEngine.solve(input) {
+            case .success(let result):
+                apply(result, to: &kineticsNumber)
+            case .failure(let error):
+                errorMessage = error.localizedDescription
+                return
             }
             
             calculationComplete = true
@@ -122,6 +125,58 @@ class KineticsNumbersViewModel: ObservableObject {
         
         }
         successMessage = "values calculated successfully"
+    }
+
+    private func engineInput(for kineticsNumber: KineticsNumbers, enteredValues: [String]) -> KineticsInput? {
+        guard let order = ReactionOrder(rawValue: selectedOrder),
+              let timeUnit = TimeUnit(rawValue: selectedTimeUnit),
+              let unknown = unknown(from: enteredValues) else {
+            return nil
+        }
+
+        return KineticsInput(
+            order: order,
+            timeUnit: timeUnit,
+            unknown: unknown,
+            rateConstant: Double(kineticsNumber.rateConstantEntered),
+            initialConcentration: Double(kineticsNumber.initialConcEntered),
+            finalConcentration: Double(kineticsNumber.finalConcEntered),
+            time: Double(kineticsNumber.timeEntered),
+            halfLife: Double(kineticsNumber.halfLifeEntered)
+        )
+    }
+
+    private func unknown(from enteredValues: [String]) -> KineticsUnknown? {
+        let values = Set(enteredValues)
+        if !values.contains("time") { return .time }
+        if !values.contains("finalConc") { return .finalConcentration }
+        if !values.contains("initialConc") { return .initialConcentration }
+        if !values.contains("rateConstant") { return .rateConstant }
+        return nil
+    }
+
+    private func apply(_ result: KineticsResult, to kineticsNumber: inout KineticsNumbers) {
+        let formattedValue = format(result.value, decimals: kineticsNumber.decimalPlaces)
+        switch result.unknown {
+        case .rateConstant:
+            kineticsNumber.rateConstantCalculated = formattedValue
+        case .time:
+            kineticsNumber.timeCalculated = formattedValue
+        case .initialConcentration:
+            kineticsNumber.initialConcCalculated = formattedValue
+        case .finalConcentration:
+            kineticsNumber.finalConcCalculated = formattedValue
+        case .halfLife:
+            kineticsNumber.halfLifeCalculated = formattedValue
+        }
+
+        if let halfLife = result.halfLife {
+            kineticsNumber.halfLifeCalculated = format(halfLife, decimals: kineticsNumber.decimalPlaces)
+        }
+    }
+
+    private func format(_ value: Double, decimals: Int) -> String {
+        String(format: "%.\(decimals)f", value)
     }
     
     private enum CalculationType {
@@ -386,41 +441,33 @@ class KineticsNumbersViewModel: ObservableObject {
     func calculateKFromHalfLife(for kineticsNumber: inout KineticsNumbers) {
 
         calculatekComplete = true
-        
-        guard let tHalf = Double(kineticsNumber.halfLifeEntered)
-            else {
-             print("Invalid input values")
-             return
-         }
-        
-        switch selectedOrder {
-        
-        case "Zero Order":
-            if let A0 = Double(kineticsNumber.initialConcEntered) {
-                let k = A0 / tHalf * 2
-                kineticsNumber.calculatedkFromHalfLife = String(format: "%.\(kineticsNumber.decimalPlaces)f", k)
-                kineticsNumber.rateConstantCalculated = kineticsNumber.calculatedkFromHalfLife
-                
-            } else {
-                print("Initial conc. required for zero order rxn")
-            }
-        
-        case "First Order":
-            let k = log(2) / tHalf
-            kineticsNumber.calculatedkFromHalfLife = String(format: "%.\(kineticsNumber.decimalPlaces)f", k)
+
+        guard let order = ReactionOrder(rawValue: selectedOrder),
+              let timeUnit = TimeUnit(rawValue: selectedTimeUnit) else {
+            errorMessage = "Unsupported reaction order or time unit."
+            return
+        }
+
+        let input = KineticsInput(
+            order: order,
+            timeUnit: timeUnit,
+            unknown: .halfLife,
+            rateConstant: nil,
+            initialConcentration: Double(kineticsNumber.initialConcEntered),
+            finalConcentration: nil,
+            time: nil,
+            halfLife: Double(kineticsNumber.halfLifeEntered)
+        )
+
+        do {
+            let k = try KineticsEngine.rateConstantFromHalfLife(input)
+            kineticsNumber.calculatedkFromHalfLife = format(k, decimals: kineticsNumber.decimalPlaces)
             kineticsNumber.rateConstantCalculated = kineticsNumber.calculatedkFromHalfLife
-        
-        case "Second Order":
-            if let A0 = Double(kineticsNumber.initialConcEntered) {
-                let k = 1 / (tHalf * A0)
-                kineticsNumber.calculatedkFromHalfLife = String(format: "%.\(kineticsNumber.decimalPlaces)f", k)
-                kineticsNumber.rateConstantCalculated = kineticsNumber.calculatedkFromHalfLife
-                
-            } else {
-                print("initial conc. required for 2nd order rxn")
-            }
-        default:
-            print("Unsupported reaction order")
+            errorMessage = nil
+        } catch let error as KineticsCalculationError {
+            errorMessage = error.localizedDescription
+        } catch {
+            errorMessage = "Unable to calculate rate constant from half-life."
         }
     }
 

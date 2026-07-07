@@ -50,7 +50,9 @@ struct ContentView: View {
                         List(selection: $selectedTool) {
                             ForEach(ToolCategory.allCases) { category in
                                 Section(category.rawValue) {
-                                    ForEach(ToolID.allCases.filter { $0.category == category }) { tool in
+                                    ForEach(ToolID.allCases.filter {
+                                        $0.category == category && $0.isVisibleInNavigation
+                                    }) { tool in
                                         SidebarRow(tool: tool, status: toolAccess.status(for: tool))
                                             .tag(tool)
                                     }
@@ -133,7 +135,7 @@ struct SidebarRow: View {
         case .sigFigs: return "number"
         case .kinetics: return "flag.checkered"
         case .ph: return "testtube.2"
-        case .combinedReaction: return "arrow.down.circle"
+        case .combinedReaction: return "flask"
         case .stoichiometry: return "flask"
         case .molarMass: return "atom"
         case .solutions: return "water.waves"
