@@ -248,7 +248,7 @@ struct KineticsView: View {
                 Text(result.unknown.resultTitle)
                     .font(.headline)
                 Spacer()
-                decimalAdjustmentButtons
+                DrPhosDecimalControl(value: $decimalPlaces, range: 0...6)
             }
 
             HStack(alignment: .firstTextBaseline, spacing: 8) {
@@ -367,39 +367,6 @@ struct KineticsView: View {
         }
     }
 
-    private var decimalAdjustmentButtons: some View {
-        HStack(spacing: 4) {
-            Button {
-                if decimalPlaces < 6 {
-                    decimalPlaces += 1
-                }
-            } label: {
-                Image(systemName: "plus.circle")
-            }
-            .buttonStyle(.plain)
-            .disabled(decimalPlaces == 6)
-
-            Text("Decimals")
-                .lineLimit(1)
-                .fixedSize(horizontal: true, vertical: false)
-
-            Button {
-                if decimalPlaces > 0 {
-                    decimalPlaces -= 1
-                }
-            } label: {
-                Image(systemName: "minus.circle")
-            }
-            .buttonStyle(.plain)
-            .disabled(decimalPlaces == 0)
-        }
-        .font(.caption2)
-        .foregroundStyle(Color.numbers)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("Decimal places")
-        .accessibilityValue("\(decimalPlaces)")
-    }
-
     private func unit(for field: KineticsField) -> String {
         switch field {
         case .rateConstant:
@@ -471,34 +438,9 @@ struct KineticsView: View {
     }
 
     private func format(_ value: Double) -> String {
-        guard value.isFinite else { return "Invalid" }
-        if shouldUseKineticsScientificNotation(value) {
-            return formatScientificForKinetics(value)
-        }
-        return String(format: "%.\(decimalPlaces)f", value)
-    }
-
-    private func shouldUseKineticsScientificNotation(_ value: Double) -> Bool {
-        guard value.isFinite else { return false }
-        let absoluteValue = abs(value)
-        return absoluteValue != 0 && (absoluteValue < 0.001 || absoluteValue > 9_999)
-    }
-
-    private func formatScientificForKinetics(_ value: Double) -> String {
-        let clampedDecimalPlaces = min(max(decimalPlaces, 0), 6)
-        let fractionPattern = clampedDecimalPlaces > 0
-            ? "." + String(repeating: "#", count: clampedDecimalPlaces)
-            : ""
-
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .scientific
-        formatter.exponentSymbol = " x10^"
-        formatter.minimumFractionDigits = 0
-        formatter.maximumFractionDigits = clampedDecimalPlaces
-        formatter.positiveFormat = "0\(fractionPattern)E+0"
-        formatter.negativeFormat = "-0\(fractionPattern)E+0"
-
-        return formatter.string(from: NSNumber(value: value)) ?? String(value)
+        NumberDisplayFormatter
+            .format(value, using: .kinetics(decimalPlaces: decimalPlaces))
+            .plainText
     }
 
     @ViewBuilder
@@ -508,9 +450,11 @@ struct KineticsView: View {
         exponentFont: Font = .system(size: 20, weight: .semibold),
         exponentOffset: CGFloat = 9
     ) -> some View {
-        if shouldUseKineticsScientificNotation(value) {
+        switch NumberDisplayFormatter.format(value, using: .kinetics(decimalPlaces: decimalPlaces)) {
+        case .scientific(let mantissa, let exponent):
             ScientificNotationView(
-                number: format(value),
+                mantissa: mantissa,
+                exponent: exponent,
                 exponentFont: exponentFont,
                 exponentOffset: exponentOffset
             )
@@ -518,8 +462,14 @@ struct KineticsView: View {
                 .monospacedDigit()
                 .lineLimit(1)
                 .minimumScaleFactor(0.65)
-        } else {
-            Text(format(value))
+        case .decimal(let value):
+            Text(value)
+                .font(font)
+                .monospacedDigit()
+                .lineLimit(1)
+                .minimumScaleFactor(0.65)
+        case .invalid:
+            Text("Invalid")
                 .font(font)
                 .monospacedDigit()
                 .lineLimit(1)

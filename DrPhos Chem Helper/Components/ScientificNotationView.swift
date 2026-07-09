@@ -37,21 +37,44 @@ enum ScientificNotationFormatter {
 }
 
 struct ScientificNotationView: View {
-    var number: String
+    private var mantissa: String
+    private var exponent: Int?
     var exponentFont: Font = .system(size: 16, weight: .semibold)
     var exponentOffset: CGFloat = 8
 
-    var body: some View {
+    init(
+        number: String,
+        exponentFont: Font = .system(size: 16, weight: .semibold),
+        exponentOffset: CGFloat = 8
+    ) {
         let components = number.split(separator: "^", maxSplits: 1)
-        let base = String(components[0])
+        mantissa = String(components[0])
             .replacingOccurrences(of: " x10", with: " × 10")
-        let exponent = components.count > 1
-            ? Self.superscript(String(components[1]))
-            : ""
+        exponent = components.count > 1
+            ? Int(String(components[1]).replacingOccurrences(of: "+", with: ""))
+            : nil
+        self.exponentFont = exponentFont
+        self.exponentOffset = exponentOffset
+    }
+
+    init(
+        mantissa: String,
+        exponent: Int,
+        exponentFont: Font = .system(size: 16, weight: .semibold),
+        exponentOffset: CGFloat = 8
+    ) {
+        self.mantissa = "\(mantissa) × 10"
+        self.exponent = exponent
+        self.exponentFont = exponentFont
+        self.exponentOffset = exponentOffset
+    }
+
+    var body: some View {
+        let exponentText = exponent.map { Self.superscript(String($0)) } ?? ""
 
         return HStack(spacing: 0) {
-            Text(base)
-            Text(exponent)
+            Text(mantissa)
+            Text(exponentText)
                 .font(exponentFont)
                 .baselineOffset(exponentOffset)
         }

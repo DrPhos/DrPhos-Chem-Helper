@@ -50,6 +50,12 @@
 		A20000612F00000100000001 /* CustomNumericKeypad.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000622F00000100000001 /* CustomNumericKeypad.swift */; };
 		A20000712F00000100000001 /* KineticsEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000722F00000100000001 /* KineticsEngine.swift */; };
 		A20000812F00000100000001 /* KineticsEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000822F00000100000001 /* KineticsEngineTests.swift */; };
+		A20000912F00000100000001 /* NumberDisplayFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000922F00000100000001 /* NumberDisplayFormatter.swift */; };
+		A20000A12F00000100000001 /* NumberDisplayFormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000A22F00000100000001 /* NumberDisplayFormatterTests.swift */; };
+		A20000B12F00000100000001 /* SolutionsEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000B22F00000100000001 /* SolutionsEngine.swift */; };
+		A20000C12F00000100000001 /* SolutionsEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000C22F00000100000001 /* SolutionsEngineTests.swift */; };
+		A20000D12F00000100000001 /* PHEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000D22F00000100000001 /* PHEngine.swift */; };
+		A20000E12F00000100000001 /* PHEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000E22F00000100000001 /* PHEngineTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -107,6 +113,12 @@
 		A20000622F00000100000001 /* CustomNumericKeypad.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomNumericKeypad.swift; sourceTree = "<group>"; };
 		A20000722F00000100000001 /* KineticsEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KineticsEngine.swift; sourceTree = "<group>"; };
 		A20000822F00000100000001 /* KineticsEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KineticsEngineTests.swift; sourceTree = "<group>"; };
+		A20000922F00000100000001 /* NumberDisplayFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumberDisplayFormatter.swift; sourceTree = "<group>"; };
+		A20000A22F00000100000001 /* NumberDisplayFormatterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumberDisplayFormatterTests.swift; sourceTree = "<group>"; };
+		A20000B22F00000100000001 /* SolutionsEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolutionsEngine.swift; sourceTree = "<group>"; };
+		A20000C22F00000100000001 /* SolutionsEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolutionsEngineTests.swift; sourceTree = "<group>"; };
+		A20000D22F00000100000001 /* PHEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PHEngine.swift; sourceTree = "<group>"; };
+		A20000E22F00000100000001 /* PHEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PHEngineTests.swift; sourceTree = "<group>"; };
 		A10000042F00000100000001 /* DrPhos Chem HelperTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "DrPhos Chem HelperTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -148,7 +160,10 @@
 				A20000422F00000100000001 /* ChemicalFormulaFormatter.swift */,
 				A10000122F00000100000001 /* ChemistryCalculations.swift */,
 				A20000722F00000100000001 /* KineticsEngine.swift */,
+				A20000922F00000100000001 /* NumberDisplayFormatter.swift */,
+				A20000D22F00000100000001 /* PHEngine.swift */,
 				A20000122F00000100000001 /* ReactionBalancingEngine.swift */,
+				A20000B22F00000100000001 /* SolutionsEngine.swift */,
 				A20000222F00000100000001 /* StoichiometryEngine.swift */,
 				A10000222F00000100000001 /* ToolAccess.swift */,
 				6B0448A72E368AE800DFF4DF /* Compound.swift */,
@@ -223,6 +238,9 @@
 				A20000522F00000100000001 /* ChemistryEngineRegressionTests.swift */,
 				A10000022F00000100000001 /* FormulaParserTests.swift */,
 				A20000822F00000100000001 /* KineticsEngineTests.swift */,
+				A20000A22F00000100000001 /* NumberDisplayFormatterTests.swift */,
+				A20000E22F00000100000001 /* PHEngineTests.swift */,
+				A20000C22F00000100000001 /* SolutionsEngineTests.swift */,
 			);
 			path = "DrPhos Chem HelperTests";
 			sourceTree = "<group>";
@@ -329,6 +347,9 @@
 			files = (
 				A20000612F00000100000001 /* CustomNumericKeypad.swift in Sources */,
 				A20000712F00000100000001 /* KineticsEngine.swift in Sources */,
+				A20000912F00000100000001 /* NumberDisplayFormatter.swift in Sources */,
+				A20000B12F00000100000001 /* SolutionsEngine.swift in Sources */,
+				A20000D12F00000100000001 /* PHEngine.swift in Sources */,
 				A20000112F00000100000001 /* ReactionBalancingEngine.swift in Sources */,
 				A20000212F00000100000001 /* StoichiometryEngine.swift in Sources */,
 				A20000312F00000100000001 /* CombinedReactionView.swift in Sources */,
@@ -375,6 +396,9 @@
 				A20000512F00000100000001 /* ChemistryEngineRegressionTests.swift in Sources */,
 				A10000012F00000100000001 /* FormulaParserTests.swift in Sources */,
 				A20000812F00000100000001 /* KineticsEngineTests.swift in Sources */,
+				A20000A12F00000100000001 /* NumberDisplayFormatterTests.swift in Sources */,
+				A20000E12F00000100000001 /* PHEngineTests.swift in Sources */,
+				A20000C12F00000100000001 /* SolutionsEngineTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

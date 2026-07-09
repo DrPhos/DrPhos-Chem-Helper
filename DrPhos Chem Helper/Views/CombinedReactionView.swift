@@ -647,7 +647,7 @@ private struct StoichiometryWorkflowSection: View {
 
                 HStack {
                     if calculationComplete {
-                        decimalAdjustmentButtons
+                        DrPhosDecimalControl(value: $displayedDecimalPlaces, range: 0...6)
                     }
 
                     Spacer()
@@ -657,36 +657,6 @@ private struct StoichiometryWorkflowSection: View {
                 }
             }
         }
-    }
-
-    private var decimalAdjustmentButtons: some View {
-        HStack(spacing: 4) {
-            Button {
-                if displayedDecimalPlaces < 6 {
-                    displayedDecimalPlaces += 1
-                }
-            } label: {
-                Image(systemName: "plus.circle")
-            }
-            .buttonStyle(.plain)
-            .disabled(displayedDecimalPlaces == 6)
-
-            Text("Decimals")
-                .font(.caption2)
-                .lineLimit(1)
-                .fixedSize(horizontal: true, vertical: false)
-
-            Button {
-                if displayedDecimalPlaces > 0 {
-                    displayedDecimalPlaces -= 1
-                }
-            } label: {
-                Image(systemName: "minus.circle")
-            }
-            .buttonStyle(.plain)
-            .disabled(displayedDecimalPlaces == 0)
-        }
-        .foregroundStyle(Color.numbers)
     }
 
 }
@@ -858,11 +828,16 @@ private struct StoichiometryAmountRow: View {
             Text(title)
                 .font(.caption2)
                 .foregroundStyle(.secondary)
-            Text(value.isEmpty ? "—" : "\(formattedResult(value)) \(unit)")
-                .font(.footnote.weight(.semibold).monospacedDigit())
-                .foregroundStyle(.primary)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
+            HStack(alignment: .firstTextBaseline, spacing: 3) {
+                formattedCalculatedResult(value)
+                if !value.isEmpty {
+                    Text(unit)
+                }
+            }
+            .font(.footnote.weight(.semibold).monospacedDigit())
+            .foregroundStyle(.primary)
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -870,6 +845,27 @@ private struct StoichiometryAmountRow: View {
     private func formattedResult(_ value: String) -> String {
         guard let number = Double(value), number.isFinite else { return "—" }
         return String(format: "%.*f", displayedDecimalPlaces, number)
+    }
+
+    @ViewBuilder
+    private func formattedCalculatedResult(_ value: String) -> some View {
+        if let number = Double(value), number.isFinite {
+            switch NumberDisplayFormatter.format(number, using: .chemistry(decimalPlaces: displayedDecimalPlaces)) {
+            case .decimal(let value):
+                Text(value)
+            case .scientific(let mantissa, let exponent):
+                ScientificNotationView(
+                    mantissa: mantissa,
+                    exponent: exponent,
+                    exponentFont: .caption2.weight(.semibold),
+                    exponentOffset: 5
+                )
+            case .invalid:
+                Text("—")
+            }
+        } else {
+            Text("—")
+        }
     }
 
     private func resultBadge(_ title: String, systemImage: String, color: Color) -> some View {

@@ -126,12 +126,61 @@ struct DrPhosValidationMessage: View {
     }
 }
 
+struct DrPhosDecimalControl: View {
+    @Binding var value: Int
+    let range: ClosedRange<Int>
+    var label: String = "Decimals"
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Button {
+                value = clamped(value - 1)
+            } label: {
+                Image(systemName: "minus.circle")
+            }
+            .buttonStyle(.plain)
+            .disabled(value <= range.lowerBound)
+
+            VStack(spacing: 0) {
+                Text(label)
+                    .font(.caption2)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
+                Text("\(value)")
+                    .font(.caption.monospacedDigit().weight(.semibold))
+                    .accessibilityHidden(true)
+            }
+
+            Button {
+                value = clamped(value + 1)
+            } label: {
+                Image(systemName: "plus.circle")
+            }
+            .buttonStyle(.plain)
+            .disabled(value >= range.upperBound)
+        }
+        .foregroundStyle(Color.numbers)
+        .onAppear {
+            value = clamped(value)
+        }
+        .onChange(of: value) { _, newValue in
+            value = clamped(newValue)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Decimal places")
+        .accessibilityValue("\(value)")
+    }
+
+    private func clamped(_ newValue: Int) -> Int {
+        min(max(newValue, range.lowerBound), range.upperBound)
+    }
+}
+
 struct DrPhosPrecisionControl: View {
     @Binding var value: Int
     let range: ClosedRange<Int>
 
     var body: some View {
-        Stepper("Decimal places: \(value)", value: $value, in: range)
-            .accessibilityValue("\(value)")
+        DrPhosDecimalControl(value: $value, range: range)
     }
 }

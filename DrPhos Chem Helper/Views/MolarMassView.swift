@@ -147,8 +147,12 @@ struct MolarMassView: View {
                                 .lineLimit(1)
                                 .fixedSize(horizontal: true, vertical: false)
                                 .foregroundColor(.numbers)
-                            decimalAdjustmentButtons
+                            DrPhosDecimalControl(value: $decimalPlaces, range: 0...6)
                                 .padding(.leading, 12)
+                                .onChange(of: decimalPlaces) { _, _ in
+                                    calculateElementalAnalysis()
+                                    updateCompoundData()
+                                }
                         }
                         
                         VStack {
@@ -167,27 +171,7 @@ struct MolarMassView: View {
     
         }
     }
-    
-    private var decimalAdjustmentButtons: some View {
-        HStack(spacing: 4) {
-            Button(action: incrementDecimalPlaces) {
-                Image(systemName: "plus.circle")
-                    .foregroundColor(Color.numbers)
-            }
-            .buttonStyle(PlainButtonStyle())
-            Text("Decimals")
-                .foregroundColor(Color.numbers)
-                .font(.caption2)
-                .lineLimit(1)
-                .fixedSize(horizontal: true, vertical: false)
-            Button(action: decrementDecimalPlaces) {
-                Image(systemName: "minus.circle")
-                    .foregroundColor(Color.numbers)
-            }
-            .buttonStyle(PlainButtonStyle())
-        }
-    }
-    
+
     private func clearInput() {
         compoundFormula = ""
         molarMass = 0.0
@@ -208,22 +192,7 @@ struct MolarMassView: View {
             isCollapsed.toggle()
         }
     }
-    
-    private func incrementDecimalPlaces() {
-        if decimalPlaces < 6 {
-            decimalPlaces += 1
-            calculateElementalAnalysis()
-            updateCompoundData()
-        }
-    }
-    
-    private func decrementDecimalPlaces() {
-        if decimalPlaces > 0 {
-            decimalPlaces -= 1
-            calculateElementalAnalysis()
-        }
-    }
-    
+
     private func handleCompoundFormulaChange() {
         if compoundFormula.isEmpty {
             isValidFormula = true

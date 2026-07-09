@@ -761,31 +761,16 @@ private struct LegacypHCalculatorView: View {
                     }
                     
                     HStack {
-                        Button(action: {
-                            if viewModel.pHValue[0].decimalPlaces < 8 {
-                                viewModel.pHValue[0].decimalPlaces += 1
-                                viewModel.calculate()
-                            }
-                        }) {
-                            Image(systemName: "plus.circle")
-                                .foregroundColor(Color.phostext)
+                        DrPhosDecimalControl(
+                            value: Binding(
+                                get: { viewModel.pHValue[0].decimalPlaces },
+                                set: { viewModel.pHValue[0].decimalPlaces = $0 }
+                            ),
+                            range: 0...8
+                        )
+                        .onChange(of: viewModel.pHValue[0].decimalPlaces) { _, _ in
+                            viewModel.calculate()
                         }
-                        .buttonStyle(PlainButtonStyle())
-                        
-                        Text("Decimals")
-                            .foregroundColor(Color.phostext)
-                            .font(.footnote)
-                        
-                        Button(action: {
-                            if viewModel.pHValue[0].decimalPlaces > 0 {
-                                viewModel.pHValue[0].decimalPlaces -= 1
-                                viewModel.calculate()
-                            }
-                        }) {
-                            Image(systemName: "minus.circle")
-                                .foregroundColor(Color.phostext)
-                        }
-                        .buttonStyle(PlainButtonStyle())
                         .padding(.trailing, 10)
                         
                         Button(action: {
