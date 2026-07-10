@@ -714,7 +714,7 @@ private struct StoichiometryAmountRow: View {
 
                 Spacer(minLength: 8)
 
-                Text(String(format: "%.2f g/mol", compound.molarMass))
+                Text("\(formattedMolarMass(compound.molarMass)) g/mol")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
@@ -844,7 +844,15 @@ private struct StoichiometryAmountRow: View {
 
     private func formattedResult(_ value: String) -> String {
         guard let number = Double(value), number.isFinite else { return "—" }
-        return String(format: "%.*f", displayedDecimalPlaces, number)
+        return NumberDisplayFormatter
+            .format(number, using: .decimal(decimalPlaces: displayedDecimalPlaces))
+            .plainText
+    }
+
+    private func formattedMolarMass(_ value: Double) -> String {
+        NumberDisplayFormatter
+            .format(value, using: .decimal(decimalPlaces: 2))
+            .plainText
     }
 
     @ViewBuilder

@@ -93,7 +93,7 @@ struct MolarMassView: View {
     }
     
     private var molarMassView: some View {
-        Text("Molar Mass = \(String(format: "%.\(decimalPlaces)f", molarMass)) g/mol")
+        Text("Molar Mass = \(formattedDecimal(molarMass)) g/mol")
             .font(.title2)
             .fontWeight(.medium)
             .foregroundColor(.phosblue1)
@@ -253,11 +253,17 @@ struct MolarMassView: View {
                 elementTotal += elementMass * multiplier
                 massPercent = elementTotal / molarMass * 100
                 
-                elementalAnalysis.append("\(elementSymbol) = \(String(format: "%.\(decimalPlaces)f", massPercent))%, ")
+                elementalAnalysis.append("\(elementSymbol) = \(formattedDecimal(massPercent))%, ")
                 
                 elementTotal = 0
             }
         }
+    }
+
+    private func formattedDecimal(_ value: Double) -> String {
+        NumberDisplayFormatter
+            .format(value, using: .decimal(decimalPlaces: decimalPlaces))
+            .plainText
     }
     
     // MARK: - Custom Views and Styles
