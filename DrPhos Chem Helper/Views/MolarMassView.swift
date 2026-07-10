@@ -280,7 +280,7 @@ struct MolarMassView: View {
                 let matches = regex.matches(in: textWithoutCommas, options: [], range: range)
                 
                 for match in matches {
-                    let matchRange = Range(match.range, in: textWithoutCommas)!
+                    guard let matchRange = Range(match.range, in: textWithoutCommas) else { continue }
                     var number = String(textWithoutCommas[matchRange])
                     number = number.trimmingCharacters(in: .whitespacesAndNewlines)
                     extractedNumbers.append(number)
@@ -303,9 +303,8 @@ struct MolarMassView: View {
                 }
                 return formattedText
             } catch {
-                print("Error creating regex: \(error.localizedDescription)")
+                return Text(eaText)
             }
-            return Text(eaText)
         }
     }
     

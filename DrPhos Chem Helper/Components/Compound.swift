@@ -158,7 +158,7 @@ class CompoundsViewModel:ObservableObject{
 
         let sortedElements=finalCounts.keys.sorted()
         let result=sortedElements.map{element in
-            let count=finalCounts[element]!
+            let count=finalCounts[element, default: 0]
             return"\(element)\(count)"
         }.joined()
 

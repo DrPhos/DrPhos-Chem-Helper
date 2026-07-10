@@ -4,7 +4,7 @@ struct ContentView: View {
     let toolAccess: ToolAccess
     @State private var selectedTool: ToolID? = UIDevice.current.userInterfaceIdiom == .pad ? .calculator : nil
 
-    init(toolAccess: ToolAccess = .developmentUnlocked) {
+    init(toolAccess: ToolAccess = .fullAccess) {
         self.toolAccess = toolAccess
     }
 

@@ -4,7 +4,8 @@ struct pHCalculatorView: View {
     @State private var problemType: PHProblemType = .conversions
     @State private var conversionKnown: PHConversionKnown = .pH
     @State private var weakCalculation: PHWeakCalculation = .weakAcid
-    @State private var bufferCalculation: PHBufferCalculation = .phFromPKa
+    @State private var bufferUnknown: PHInputField = .pH
+    @State private var bufferConstantMode: PHBufferConstantMode = .pKa
     @State private var decimalPlaces = 2
     @State private var activeField: PHInputField?
     @State private var values: [PHInputField: String] = [:]
@@ -24,7 +25,13 @@ struct pHCalculatorView: View {
                         }
                     }
                     .pickerStyle(.segmented)
-                    .onChange(of: problemType) { _, _ in resetCalculation(keepInputs: false) }
+                    .onChange(of: problemType) { _, newValue in
+                        if newValue == .buffer {
+                            bufferUnknown = .pH
+                            bufferConstantMode = .pKa
+                        }
+                        resetCalculation(keepInputs: false)
+                    }
                 }
 
                 stepSection("Step 2", title: problemType.stepTwoTitle) {
@@ -41,30 +48,40 @@ struct pHCalculatorView: View {
 
                 stepSection("Step 4", title: "Calculate") {
                     VStack(spacing: 14) {
-                        HStack(spacing: 12) {
-                            DrPhosActionButton("Calculate", systemImage: "equal", action: calculate)
-                            DrPhosActionButton("Clear", systemImage: "xmark", style: .destructive, action: clear)
-                        }
-
-                        HStack {
-                            Spacer()
-                            DrPhosDecimalControl(value: $decimalPlaces, range: 0...8)
+                        if let result, !result.isBuffer {
+                            resultCard(result)
                         }
 
                         if let validationMessage {
                             DrPhosValidationMessage(message: validationMessage)
                         }
 
-                        if let result {
-                            resultCard(result)
+                        HStack(spacing: 12) {
+                            DrPhosActionButton("Calculate", systemImage: "equal", action: calculate)
+
+                            DrPhosDecimalControl(value: $decimalPlaces, range: 0...8)
+                                .fixedSize(horizontal: true, vertical: false)
+                        }
+
+                        HStack {
+                            Spacer()
+
+                            DrPhosActionButton("Clear", systemImage: "xmark", style: .destructive, action: clear)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.85)
+                                .frame(maxWidth: 180)
                         }
                     }
                 }
 
+            }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
                 if let activeField {
                     numericKeypad(for: activeField)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
+            .animation(.easeInOut(duration: 0.18), value: activeField)
         }
     }
 
@@ -84,7 +101,8 @@ struct pHCalculatorView: View {
         case .weak:
             Picker("Calculation", selection: $weakCalculation) {
                 ForEach(PHWeakCalculation.allCases) { calculation in
-                    Text(calculation.rawValue).tag(calculation)
+                    weakCalculationLabel(calculation)
+                        .tag(calculation)
                 }
             }
             .pickerStyle(.wheel)
@@ -92,16 +110,281 @@ struct pHCalculatorView: View {
             .clipped()
             .onChange(of: weakCalculation) { _, _ in resetCalculation(keepInputs: false) }
         case .buffer:
-            Picker("Buffer calculation", selection: $bufferCalculation) {
-                ForEach(PHBufferCalculation.allCases) { calculation in
-                    Text(calculation.rawValue).tag(calculation)
+            bufferEquationInterface
+        }
+    }
+
+    @ViewBuilder
+    private func weakCalculationLabel(_ calculation: PHWeakCalculation) -> some View {
+        switch calculation {
+        case .weakAcid:
+            HStack(spacing: 0) {
+                Text("pH from ")
+                PHSymbolText(.ka)
+                Text(" and [HA]")
+            }
+        case .weakBase:
+            HStack(spacing: 0) {
+                Text("pH from ")
+                PHSymbolText(.kb)
+                Text(" and [A⁻]")
+            }
+        case .conjugateBase:
+            HStack(spacing: 0) {
+                Text("pH from ")
+                PHSymbolText(.ka)
+                Text(" and [A⁻]")
+            }
+        case .conjugateAcid:
+            HStack(spacing: 0) {
+                Text("pH from ")
+                PHSymbolText(.kb)
+                Text(" and [HA]")
+            }
+        case .kaFromPH:
+            HStack(spacing: 0) {
+                PHSymbolText(.ka)
+                Text(" from pH and [HA]")
+            }
+        case .kbFromPH:
+            HStack(spacing: 0) {
+                PHSymbolText(.kb)
+                Text(" from pH and [A⁻]")
+            }
+        }
+    }
+
+    private var bufferEquationInterface: some View {
+        VStack(spacing: 16) {
+            HStack {
+                Text("Unknown")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Text(bufferUnknown.accessibilityTitle)
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(Color.phosgreen1)
+            }
+
+            Picker("Acid constant input", selection: $bufferConstantMode) {
+                Text("pKₐ").tag(PHBufferConstantMode.pKa)
+                Text("Kₐ").tag(PHBufferConstantMode.ka)
+            }
+            .pickerStyle(.segmented)
+            .onChange(of: bufferConstantMode) { oldValue, newValue in
+                if bufferUnknown == oldValue.field {
+                    bufferUnknown = newValue.field
+                }
+                result = nil
+                validationMessage = nil
+                activeField = nil
+            }
+
+            Text("Tap a variable in the equation to choose what to solve for.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+
+            bufferEquationEditor
+
+            if let result, result.isBuffer, let context = result.context {
+                Text(context)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+        }
+    }
+
+    private var bufferEquationEditor: some View {
+        VStack(spacing: 10) {
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .center, spacing: 4) {
+                    bufferVariableBox(.pH)
+                    Text("=")
+                        .font(.headline.weight(.semibold))
+                    bufferVariableBox(bufferConstantMode.field)
+                    Text("+")
+                        .font(.headline.weight(.semibold))
+                    Text("log(")
+                        .font(.subheadline.weight(.semibold))
+                    bufferFraction
+                    Text(")")
+                        .font(.subheadline.weight(.semibold))
+                }
+                .frame(maxWidth: .infinity)
+
+                VStack(spacing: 10) {
+                    HStack(alignment: .center, spacing: 5) {
+                        bufferVariableBox(.pH)
+                        Text("=")
+                            .font(.headline.weight(.semibold))
+                        bufferVariableBox(bufferConstantMode.field)
+                    }
+
+                    HStack(alignment: .center, spacing: 5) {
+                        Text("+ log(")
+                            .font(.headline.weight(.semibold))
+                        bufferFraction
+                        Text(")")
+                            .font(.headline.weight(.semibold))
+                    }
+                }
+                .frame(maxWidth: .infinity)
+            }
+
+            Text("[A⁻] = base form, [HA] = acid form")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 6)
+    }
+
+    private var bufferFraction: some View {
+        VStack(spacing: 4) {
+            bufferVariableBox(.base)
+            Rectangle()
+                .frame(width: 78, height: 1.5)
+                .foregroundStyle(.primary)
+            bufferVariableBox(.acid)
+        }
+    }
+
+    private var bufferEquationResultDisplay: some View {
+        VStack(spacing: 12) {
+            HStack(alignment: .center, spacing: 8) {
+                bufferVariableBox(.pH)
+                Text("=")
+                    .font(.title3.weight(.semibold))
+                bufferVariableBox(bufferConstantMode.field)
+            }
+
+            HStack(alignment: .center, spacing: 8) {
+                Text("+ log(")
+                    .font(.title3.weight(.semibold))
+
+                VStack(spacing: 6) {
+                    bufferVariableBox(.base)
+                    Rectangle()
+                        .frame(width: 116, height: 1.5)
+                        .foregroundStyle(.primary)
+                    bufferVariableBox(.acid)
+                }
+
+                Text(")")
+                    .font(.title3.weight(.semibold))
+            }
+
+            Text("[A⁻] = base form, [HA] = acid form")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 6)
+    }
+
+    private func bufferVariableBox(_ field: PHInputField) -> some View {
+        Button {
+            bufferUnknown = field
+            result = nil
+            validationMessage = nil
+            activeField = nil
+        } label: {
+            VStack(spacing: 5) {
+                if bufferUnknown == field, field != .acid {
+                    phInputLabel(field, font: .caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                }
+
+                HStack(spacing: 0) {
+                    bufferBoxValueContent(for: field)
+                }
+                .frame(minWidth: bufferBoxMinWidth(for: field), minHeight: 38)
+                .padding(.horizontal, 6)
+                .background(bufferBoxBackground(for: field), in: RoundedRectangle(cornerRadius: 10))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(bufferBoxStroke(for: field), lineWidth: bufferUnknown == field ? 2 : 1.25)
+                }
+
+                if bufferUnknown == field, field == .acid {
+                    phInputLabel(field, font: .caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
                 }
             }
-            .pickerStyle(.wheel)
-            .frame(maxHeight: 150)
-            .clipped()
-            .onChange(of: bufferCalculation) { _, _ in resetCalculation(keepInputs: false) }
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Solve for \(field.accessibilityTitle)")
+    }
+
+    @ViewBuilder
+    private func bufferBoxValueContent(for field: PHInputField) -> some View {
+        if let value = bufferDisplayedResultValue(for: field) {
+            formattedValue(value, prominent: field == bufferUnknown)
+        } else if bufferUnknown == field {
+            Text("?")
+                .font(.title3.weight(.bold))
+                .foregroundStyle(.primary)
+        } else if field == .ka, let value = CustomNumericInputEditor.parsedFiniteValue(from: rawValue(for: field)) {
+            formattedValue(value)
+        } else if rawValue(for: field).isEmpty {
+            phInputLabel(field, font: .subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+        } else {
+            Text(rawValue(for: field))
+                .font(.subheadline.monospacedDigit().weight(.semibold))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.65)
+        }
+    }
+
+    private func bufferBoxMinWidth(for field: PHInputField) -> CGFloat {
+        switch field {
+        case .base, .acid:
+            64
+        default:
+            54
+        }
+    }
+
+    private func bufferDisplayedResultValue(for field: PHInputField) -> Double? {
+        guard result?.isBuffer == true else { return nil }
+        return result?.value(for: field)?.value
+    }
+
+    private func bufferBoxBackground(for field: PHInputField) -> Color {
+        if result?.isBuffer == true, field == bufferUnknown {
+            return Color.phosgreen1.opacity(0.22)
+        }
+
+        if field == bufferUnknown {
+            return Color.accentColor.opacity(0.12)
+        }
+
+        return Color.white.opacity(0.65)
+    }
+
+    private func bufferBoxStroke(for field: PHInputField) -> Color {
+        if result?.isBuffer == true, field == bufferUnknown {
+            return Color.phosgreen1.opacity(0.75)
+        }
+
+        if field == bufferUnknown {
+            return Color.accentColor.opacity(0.8)
+        }
+
+        return Color.secondary.opacity(0.25)
     }
 
     private func stepSection<Content: View>(
@@ -117,8 +400,7 @@ struct pHCalculatorView: View {
     private func inputRow(for field: PHInputField) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text(field.title)
-                    .font(.headline)
+                phInputLabel(field, font: .headline)
                 Spacer()
                 if let unit = field.unit {
                     Text(unit)
@@ -154,15 +436,17 @@ struct pHCalculatorView: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(field.title)
+        .accessibilityLabel(field.accessibilityTitle)
         .accessibilityValue(rawValue(for: field).isEmpty ? "Empty" : rawValue(for: field))
     }
 
     private func numericKeypad(for field: PHInputField) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("Editing \(field.title)")
-                    .font(.headline)
+                HStack(spacing: 4) {
+                    Text("Editing")
+                    phInputLabel(field, font: .headline)
+                }
                 Spacer()
                 Text(rawValue(for: field).isEmpty ? "—" : rawValue(for: field))
                     .font(.headline.monospacedDigit())
@@ -191,6 +475,21 @@ struct pHCalculatorView: View {
         }
         .shadow(color: .black.opacity(0.12), radius: 8, y: -2)
         .padding(.horizontal, 8)
+    }
+
+    @ViewBuilder
+    private func phInputLabel(_ field: PHInputField, font: Font) -> some View {
+        switch field {
+        case .ka:
+            PHSymbolText(.ka, font: font)
+        case .kb:
+            PHSymbolText(.kb, font: font)
+        case .pKa:
+            PHSymbolText(.pKa, font: font)
+        default:
+            Text(field.title)
+                .font(font)
+        }
     }
 
     private func resultCard(_ result: PHDisplayResult) -> some View {
@@ -225,8 +524,7 @@ struct pHCalculatorView: View {
 
     private func resultRow(_ row: PHResultRow) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
-            Text(row.label)
-                .font(row.isPrimary ? .title3.weight(.semibold) : .subheadline.weight(.semibold))
+            phInputLabel(row.field, font: row.isPrimary ? .title3.weight(.semibold) : .subheadline.weight(.semibold))
             Text("=")
                 .foregroundStyle(.secondary)
             formattedValue(row.value, prominent: row.isPrimary)
@@ -245,25 +543,29 @@ struct pHCalculatorView: View {
                 equationBox(label: "pH", value: result.value(for: .pH), highlight: result.highlightedField == .pH)
                 Text("=")
                     .font(.title3.weight(.semibold))
-                equationBox(label: "pKa", value: result.value(for: .pKa), highlight: result.highlightedField == .pKa)
-                Text("+ log")
+                equationBox(label: "pKₐ", value: result.value(for: .pKa), highlight: result.highlightedField == .pKa)
+                Text("+")
+                    .font(.title3.weight(.semibold))
+                Text("log(")
                     .font(.headline)
             }
 
-            HStack(alignment: .center, spacing: 10) {
-                VStack(spacing: 5) {
-                    equationBox(label: "[A⁻]", value: result.value(for: .ratio), highlight: result.highlightedField == .ratio)
-                    Rectangle()
-                        .frame(width: 96, height: 1.5)
-                        .foregroundStyle(.primary)
-                    Text("[HA]")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                }
-                Text("ratio")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+            HStack(alignment: .center, spacing: 8) {
+                Spacer(minLength: 0)
+                equationBox(label: "[A⁻]/[HA]", value: result.value(for: .ratio), highlight: result.highlightedField == .ratio)
+                Text(")")
+                    .font(.headline)
+                Spacer(minLength: 0)
             }
+
+            Text("base / acid ratio")
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(.secondary)
+
+            Text("[A⁻] = base form, [HA] = acid form")
+                .font(.caption)
+                .multilineTextAlignment(.center)
+                .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 4)
@@ -274,6 +576,8 @@ struct pHCalculatorView: View {
             Text(label)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
             HStack(spacing: 0) {
                 if let value {
                     formattedValue(value.value, prominent: highlight)
@@ -330,8 +634,12 @@ struct pHCalculatorView: View {
         case .weak:
             weakCalculation.requiredFields
         case .buffer:
-            bufferCalculation.requiredFields
+            bufferRequiredFields
         }
+    }
+
+    private var bufferRequiredFields: [PHInputField] {
+        [.pH, bufferConstantMode.field, .base, .acid].filter { $0 != bufferUnknown }
     }
 
     private func calculate() {
@@ -394,32 +702,32 @@ struct pHCalculatorView: View {
         case .weakAcid:
             weak = try PHEngine.weakAcidPH(ka: required(.ka), initialAcidConcentration: required(.acid))
             title = "Weak acid result"
-            context = "Solved from Ka and initial [HA]."
+            context = "Solved from Kₐ and initial [HA]."
         case .weakBase:
             weak = try PHEngine.weakBasePH(kb: required(.kb), initialBaseConcentration: required(.base))
             title = "Weak base result"
-            context = "Solved from Kb and initial base concentration."
+            context = "Solved from Kb and initial [A⁻]."
         case .conjugateBase:
             weak = try PHEngine.conjugateBasePH(ka: required(.ka), initialConjugateBaseConcentration: required(.base))
-            title = "Conjugate base result"
-            context = "Used Kb = Kw / Ka."
+            title = "[A⁻] result"
+            context = "Used Kb = Kw / Kₐ for [A⁻]."
         case .conjugateAcid:
             weak = try PHEngine.conjugateAcidPH(kb: required(.kb), initialConjugateAcidConcentration: required(.acid))
-            title = "Conjugate acid result"
-            context = "Used Ka = Kw / Kb."
+            title = "[HA] result"
+            context = "Used Kₐ = Kw / Kb for [HA]."
         case .kaFromPH:
             let ka = try PHEngine.kaFromPH(pH: required(.pH), acidConcentration: required(.acid))
             return PHDisplayResult(
                 title: "Weak acid constant",
-                rows: [PHResultRow(field: .ka, label: "Ka", value: ka, unit: nil, isPrimary: true)],
-                context: "Current app approximation: Ka = [H₃O⁺]² / [HA]."
+                rows: [PHResultRow(field: .ka, label: "Kₐ", value: ka, unit: nil, isPrimary: true)],
+                context: "Current app approximation: Kₐ = [H₃O⁺]² / [HA]."
             )
         case .kbFromPH:
             let kb = try PHEngine.kbFromPH(pH: required(.pH), baseConcentration: required(.base))
             return PHDisplayResult(
                 title: "Weak base constant",
                 rows: [PHResultRow(field: .kb, label: "Kb", value: kb, unit: nil, isPrimary: true)],
-                context: "Current app approximation: Kb = [OH⁻]² / base concentration."
+                context: "Current app approximation: Kb = [OH⁻]² / [A⁻]."
             )
         }
 
@@ -436,54 +744,125 @@ struct pHCalculatorView: View {
     }
 
     private func bufferResult() throws -> PHDisplayResult {
-        switch bufferCalculation {
-        case .phFromPKa:
-            let pKa = try required(.pKa)
-            let ratio = try required(.ratio)
-            let pH = try PHEngine.bufferPH(pKa: pKa, baseAcidRatio: ratio)
-            return bufferDisplayResult(pH: pH, pKa: pKa, ratio: ratio, highlightedField: .pH)
-        case .phFromKa:
-            let ka = try required(.ka)
-            let pKa = try PHEngine.pKa(fromKa: ka)
-            let ratio = try required(.ratio)
-            let pH = try PHEngine.bufferPH(ka: ka, baseAcidRatio: ratio)
-            return bufferDisplayResult(pH: pH, pKa: pKa, ratio: ratio, highlightedField: .pH, context: "Converted Ka to pKa first.")
-        case .pKaFromPH:
+        switch bufferUnknown {
+        case .pH:
+            let constant = try bufferConstant()
+            let base = try requiredPositive(.base)
+            let acid = try requiredPositive(.acid)
+            let ratio = try finitePositive(base / acid, "Unable to calculate a valid [A⁻]/[HA] ratio.")
+            let pH = try PHEngine.bufferPH(pKa: constant.pKa, baseAcidRatio: ratio)
+            return bufferDisplayResult(
+                pH: pH,
+                pKa: constant.pKa,
+                ka: constant.ka,
+                base: base,
+                acid: acid,
+                highlightedField: .pH,
+                context: constant.context
+            )
+        case .pKa, .ka:
             let pH = try required(.pH)
-            let ratio = try required(.ratio)
+            let base = try requiredPositive(.base)
+            let acid = try requiredPositive(.acid)
+            let ratio = try finitePositive(base / acid, "Unable to calculate a valid [A⁻]/[HA] ratio.")
             let pKa = try PHEngine.bufferPKa(pH: pH, baseAcidRatio: ratio)
-            return bufferDisplayResult(pH: pH, pKa: pKa, ratio: ratio, highlightedField: .pKa)
-        case .ratioFromPH:
+            let ka = try PHEngine.ka(fromPKa: pKa)
+            return bufferDisplayResult(
+                pH: pH,
+                pKa: pKa,
+                ka: ka,
+                base: base,
+                acid: acid,
+                highlightedField: bufferConstantMode.field,
+                context: bufferConstantMode == .ka ? "Calculated Kₐ from pKₐ after solving the equation." : nil
+            )
+        case .base:
             let pH = try required(.pH)
-            let pKa = try required(.pKa)
-            let ratio = try PHEngine.bufferBaseAcidRatio(pH: pH, pKa: pKa)
-            return bufferDisplayResult(pH: pH, pKa: pKa, ratio: ratio, highlightedField: .ratio)
+            let constant = try bufferConstant()
+            let acid = try requiredPositive(.acid)
+            let ratio = try PHEngine.bufferBaseAcidRatio(pH: pH, pKa: constant.pKa)
+            let base = try finitePositive(ratio * acid, "Unable to calculate a valid [A⁻].")
+            return bufferDisplayResult(
+                pH: pH,
+                pKa: constant.pKa,
+                ka: constant.ka,
+                base: base,
+                acid: acid,
+                highlightedField: .base,
+                context: constant.context
+            )
+        case .acid:
+            let pH = try required(.pH)
+            let constant = try bufferConstant()
+            let base = try requiredPositive(.base)
+            let ratio = try PHEngine.bufferBaseAcidRatio(pH: pH, pKa: constant.pKa)
+            let acid = try finitePositive(base / ratio, "Unable to calculate a valid [HA].")
+            return bufferDisplayResult(
+                pH: pH,
+                pKa: constant.pKa,
+                ka: constant.ka,
+                base: base,
+                acid: acid,
+                highlightedField: .acid,
+                context: constant.context
+            )
+        default:
+            throw PHCalculationError.invalidValue("Choose pH, pKₐ, Kₐ, [A⁻], or [HA] as the buffer unknown.")
         }
     }
 
     private func bufferDisplayResult(
         pH: Double,
         pKa: Double,
-        ratio: Double,
+        ka: Double?,
+        base: Double,
+        acid: Double,
         highlightedField: PHInputField,
         context: String? = nil
     ) -> PHDisplayResult {
-        PHDisplayResult(
+        let constantField = bufferConstantMode.field
+        let constantValue = bufferConstantMode == .ka ? ka ?? pow(10, -pKa) : pKa
+
+        return PHDisplayResult(
             title: "Henderson-Hasselbalch",
             rows: [
                 PHResultRow(field: .pH, label: "pH", value: pH, unit: nil, isPrimary: highlightedField == .pH),
-                PHResultRow(field: .pKa, label: "pKa", value: pKa, unit: nil, isPrimary: highlightedField == .pKa),
-                PHResultRow(field: .ratio, label: "[A⁻]/[HA]", value: ratio, unit: nil, isPrimary: highlightedField == .ratio)
+                PHResultRow(field: constantField, label: constantField.title, value: constantValue, unit: nil, isPrimary: highlightedField == constantField),
+                PHResultRow(field: .base, label: "[A⁻]", value: base, unit: "M", isPrimary: highlightedField == .base),
+                PHResultRow(field: .acid, label: "[HA]", value: acid, unit: "M", isPrimary: highlightedField == .acid)
             ],
-            context: context ?? "pH = pKa + log([A⁻]/[HA])",
+            context: context ?? "pH = pKₐ + log([A⁻]/[HA])",
             isBuffer: true,
             highlightedField: highlightedField
         )
     }
 
+    private func bufferConstant() throws -> (pKa: Double, ka: Double?, context: String?) {
+        switch bufferConstantMode {
+        case .pKa:
+            return (try required(.pKa), nil, nil)
+        case .ka:
+            let ka = try requiredPositive(.ka)
+            let pKa = try PHEngine.pKa(fromKa: ka)
+            return (pKa, ka, "Converted Kₐ to pKₐ for the Henderson-Hasselbalch equation.")
+        }
+    }
+
     private func required(_ field: PHInputField) throws -> Double {
         guard let value = CustomNumericInputEditor.parsedFiniteValue(from: rawValue(for: field)) else {
             throw PHCalculationError.invalidValue("Enter a valid value for \(field.title).")
+        }
+        return value
+    }
+
+    private func requiredPositive(_ field: PHInputField) throws -> Double {
+        let value = try required(field)
+        return try finitePositive(value, "\(field.accessibilityTitle) must be greater than zero.")
+    }
+
+    private func finitePositive(_ value: Double, _ message: String) throws -> Double {
+        guard value.isFinite, value > 0 else {
+            throw PHCalculationError.invalidValue(message)
         }
         return value
     }
@@ -531,7 +910,7 @@ private enum PHProblemType: String, CaseIterable, Identifiable {
         switch self {
         case .conversions: "Choose known value"
         case .weak: "Choose weak solution calculation"
-        case .buffer: "Choose buffer calculation"
+        case .buffer: "Select unknown in equation"
         }
     }
 }
@@ -555,12 +934,12 @@ private enum PHConversionKnown: String, CaseIterable, Identifiable {
 }
 
 private enum PHWeakCalculation: String, CaseIterable, Identifiable {
-    case weakAcid = "pH from Ka and [HA]"
-    case weakBase = "pH from Kb and base concentration"
-    case conjugateBase = "Conjugate base from Ka"
-    case conjugateAcid = "Conjugate acid from Kb"
-    case kaFromPH = "Ka from pH and [HA]"
-    case kbFromPH = "Kb from pH and base concentration"
+    case weakAcid = "pH from Kₐ and [HA]"
+    case weakBase = "pH from Kb and [A⁻]"
+    case conjugateBase = "pH from Kₐ and [A⁻]"
+    case conjugateAcid = "pH from Kb and [HA]"
+    case kaFromPH = "Kₐ from pH and [HA]"
+    case kbFromPH = "Kb from pH and [A⁻]"
 
     var id: Self { self }
 
@@ -582,24 +961,16 @@ private enum PHWeakCalculation: String, CaseIterable, Identifiable {
     }
 }
 
-private enum PHBufferCalculation: String, CaseIterable, Identifiable {
-    case phFromPKa = "pH from pKa and ratio"
-    case phFromKa = "pH from Ka and ratio"
-    case pKaFromPH = "pKa from pH and ratio"
-    case ratioFromPH = "Ratio from pH and pKa"
+private enum PHBufferConstantMode: String, CaseIterable, Identifiable {
+    case pKa
+    case ka
 
     var id: Self { self }
 
-    var requiredFields: [PHInputField] {
+    var field: PHInputField {
         switch self {
-        case .phFromPKa:
-            [.pKa, .ratio]
-        case .phFromKa:
-            [.ka, .ratio]
-        case .pKaFromPH:
-            [.pH, .ratio]
-        case .ratioFromPH:
-            [.pH, .pKa]
+        case .pKa: .pKa
+        case .ka: .ka
         }
     }
 }
@@ -624,12 +995,21 @@ private enum PHInputField: String, CaseIterable, Identifiable, Hashable {
         case .pOH: "pOH"
         case .hydronium: "[H₃O⁺]"
         case .hydroxide: "[OH⁻]"
-        case .ka: "Ka"
+        case .ka: "Kₐ"
         case .kb: "Kb"
         case .acid: "[HA]"
-        case .base: "[A⁻] / base"
-        case .pKa: "pKa"
+        case .base: "[A⁻]"
+        case .pKa: "pKₐ"
         case .ratio: "[A⁻]/[HA] ratio"
+        }
+    }
+
+    var accessibilityTitle: String {
+        switch self {
+        case .ka: "Ka"
+        case .kb: "Kb"
+        case .pKa: "pKa"
+        default: title
         }
     }
 
@@ -661,6 +1041,56 @@ private struct PHDisplayResult {
 
     func value(for field: PHInputField) -> PHResultRow? {
         rows.first { $0.field == field }
+    }
+}
+
+private enum PHSymbol {
+    case ka
+    case kb
+    case pKa
+}
+
+private struct PHSymbolText: View {
+    let symbol: PHSymbol
+    var font: Font
+    var subscriptFont: Font
+    var subscriptOffset: CGFloat
+
+    init(
+        _ symbol: PHSymbol,
+        font: Font = .body,
+        subscriptFont: Font = .caption,
+        subscriptOffset: CGFloat = -3
+    ) {
+        self.symbol = symbol
+        self.font = font
+        self.subscriptFont = subscriptFont
+        self.subscriptOffset = subscriptOffset
+    }
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 0) {
+            if symbol == .pKa {
+                Text("p")
+                    .font(font)
+            }
+
+            Text("K")
+                .font(font)
+
+            Text(symbol == .kb ? "b" : "a")
+                .font(subscriptFont)
+                .baselineOffset(subscriptOffset)
+        }
+        .accessibilityLabel(accessibilityLabel)
+    }
+
+    private var accessibilityLabel: String {
+        switch symbol {
+        case .ka: "Ka"
+        case .kb: "Kb"
+        case .pKa: "pKa"
+        }
     }
 }
 

@@ -233,7 +233,6 @@ struct GenChemNamingView: View {
 
             if lowercasedInput.contains(elementNameLowercased) {
                 if elementType == "metal" {
-                    print("Found metal \(element.name)")
                     compoundString = [Compounds(
                         id: 1,
                         userInput: userInput,
@@ -244,7 +243,6 @@ struct GenChemNamingView: View {
                         type: "ionic"
                     )]
                 } else {
-                    print("Found non-metal \(element.name)")
                     compoundString = [Compounds(
                         id: 1,
                         userInput: userInput,
@@ -274,7 +272,6 @@ struct GenChemNamingView: View {
 
                 if inputPrefix == elementSymbol {
                     if elementType == "metal" {
-                        print("Found metal \(element.name)")
                         compoundString = [Compounds(
                             id: 1,
                             userInput: userInput,
@@ -285,7 +282,6 @@ struct GenChemNamingView: View {
                             type: "ionic"
                         )]
                     } else {
-                        print("Found non-metal \(element.name)")
                         compoundString = [Compounds(
                             id: 1,
                             userInput: userInput,
@@ -301,7 +297,6 @@ struct GenChemNamingView: View {
             }
         }
 
-        print("No matching element found for \(userInput)")
         compoundString = [Compounds(
             id: 1,
             userInput: userInput,
@@ -317,24 +312,18 @@ struct GenChemNamingView: View {
         guard let firstCompound = compoundString.first else { return }
 
         if firstCompound.nameToFormula && firstCompound.containsMetal {
-            print("Logic for ionic name-to-formula")
             _ = ionicNameToFormula(compounds: firstCompound)
         } else if firstCompound.nameToFormula && !firstCompound.containsMetal {
-            print("Logic for molecular name-to-formula")
             molecularNameToFormula()
         } else if !firstCompound.nameToFormula && firstCompound.containsMetal {
-            print("Logic for ionic formula-to-name")
             ionicFormulaToName()
         } else if !firstCompound.nameToFormula && !firstCompound.containsMetal {
-            print("Logic for molecular formula-to-name")
             _ = molecularFormulaToName()
-            print("molecularName: \(molecularNameString)")
         }
     }
 
     func molecularNameToFormula() {
         var molecularCompoundString = [(word: String, prefix: String, prefixnumber: Int, elementname: String)]()
-        print("Running molecularNametoFormula Function")
 
         let words = userInput.lowercased().components(separatedBy: " ")
         let molecularPrefixes: [String: Int] = [
@@ -367,7 +356,6 @@ struct GenChemNamingView: View {
             molecularCompoundString.append(tuple)
         }
 
-        print("Parsed Molecular Name: \(molecularCompoundString)")
         _ = buildParsedFormula(molecularCompoundString: molecularCompoundString)
     }
 
@@ -405,7 +393,7 @@ struct GenChemNamingView: View {
                     compoundString[compoundString.count - 1] = updatedCompound
                 }
             } else {
-                print("Element \(elementName) not found in the periodic table.")
+                continue
             }
         }
         
@@ -413,9 +401,7 @@ struct GenChemNamingView: View {
     }
 
     func molecularFormulaToName() -> String {
-        print("compoundString Input \(compoundString)")
         guard let compounds = compoundString.first?.compoundFormula else {
-            print("No compounds in the array")
             return ""
         }
 
@@ -441,12 +427,14 @@ struct GenChemNamingView: View {
         ]
 
         let pattern = #"([A-Z][a-z]*)(\d*)"# // regex to match elements and their counts
-        let regex = try! NSRegularExpression(pattern: pattern, options: [])
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else { return "" }
         let matches = regex.matches(in: compounds, options: [], range: NSRange(location: 0, length: compounds.utf16.count))
 
         for match in matches {
-            let elementRange = Range(match.range(at: 1), in: compounds)!
-            let countRange = Range(match.range(at: 2), in: compounds)!
+            guard
+                let elementRange = Range(match.range(at: 1), in: compounds),
+                let countRange = Range(match.range(at: 2), in: compounds)
+            else { continue }
             let element = String(compounds[elementRange])
             let countString = String(compounds[countRange])
             let count = Int(countString) ?? 1
@@ -734,7 +722,6 @@ struct GenChemNamingView: View {
                     let elementSymbol = "NH4"
                     if let tempName = cationsFtN[elementSymbol] {
                         cationName = tempName.name
-                        print("cationName \(cationName)")
                     }
                     ionCount += 1
                     i = startIndex
@@ -753,7 +740,6 @@ struct GenChemNamingView: View {
                     i = startIndex
                     cation = false
                     numberOfCations = 1
-                    print("cation name: \(cationName)")
 
                     char = compoundFormula[i]
 
@@ -798,21 +784,16 @@ struct GenChemNamingView: View {
 
                 let multiplier = Double(subscriptValue) ?? 1.0
                 numberOfCations = ionCount * Int(multiplier)
-                print("cationCount \(numberOfCations)")
 
                 if let tempSymbol = cationsFtN[elementSymbol] {
                     cationSymbol = tempSymbol.symbol
-                    print("cationSymbol \(cationSymbol)")
                 } else {
-                    print("Error: Unrecognized cation symbol \(elementSymbol)")
                     return
                 }
 
                 if let tempName = cationsFtN[elementSymbol] {
                     cationName = tempName.name
-                    print("cationName \(cationName)")
                 } else {
-                    print("Error: Unrecognized cation symbol \(elementSymbol)")
                     return
                 }
 
@@ -825,7 +806,6 @@ struct GenChemNamingView: View {
                 }
 
                 if i == compoundFormula.endIndex {
-                    print("no anion")
                     anionName = "(no anion found)"
                     return
                 }
@@ -860,10 +840,7 @@ struct GenChemNamingView: View {
                         if let anion = anionsFtN[elementSymbol] {
                             tempAnionCharge = anion.charge
                             anionName = anion.name
-                            print("anion name: \(anionName)")
-                            print("anion charge: \(tempAnionCharge)")
                         } else {
-                            print("Error: Unrecognized anion symbol \(elementSymbol)")
                             return
                         }
                     }
@@ -881,12 +858,10 @@ struct GenChemNamingView: View {
 
                     let multiplier = Double(subscriptValue) ?? 1.0
                     totalAnionCharge = tempAnionCharge * Int(multiplier)
-                    print("totalCharge \(totalAnionCharge)")
 
                     subscriptValue.removeAll()
 
                     cationCharge = abs(totalAnionCharge) / numberOfCations
-                    print("cationCharge \(cationCharge)")
 
                     if i < compoundFormula.endIndex {
                         char = compoundFormula[i]
@@ -934,13 +909,7 @@ struct GenChemNamingView: View {
                 if let anion = anionsFtN[elementSymbol] {
                     tempAnionCharge = anion.charge
                     anionName = anion.name
-                    print("anion name: \(anionName)")
-                    print("anion charge: \(tempAnionCharge)")
                 } // anion name and charge
-                
-                else {
-                    print("Anion not found")
-                }
                 
                 var subscriptValue = ""
                 
@@ -956,12 +925,10 @@ struct GenChemNamingView: View {
                 
                 let multiplier = Double(subscriptValue) ?? 1.0
                 totalAnionCharge = tempAnionCharge * Int(multiplier)
-                print("totalCharge \(totalAnionCharge)")
                 
                 subscriptValue.removeAll()
                 
                 cationCharge = abs(totalAnionCharge)/numberOfCations
-                print("cationCharge \(cationCharge)")
                 
                 if i < compoundFormula.endIndex {
                     char = compoundFormula[i]
@@ -972,22 +939,17 @@ struct GenChemNamingView: View {
         }
         
         if cationSymbol.isEmpty {
-            // Handle the case where no cation was found
-            print("Error: No cation found.")
             return
         }
         
         if let cationInfo = cationsFtN[cationSymbol] {
             if cationInfo.tMetal == true {
-                print("\(cationSymbol) is a transition metal.")
                 convertToRoman(cationCharge)
-                print("Roman Number \(romanNumeral)")
             } else {
                 romanNumeral = ""
-                print("\(cationSymbol) is not a transition metal.")
             }
         } else {
-            print("Cation information not found.")
+            return
         }
         
         func convertToRoman(_ charge: Int) {

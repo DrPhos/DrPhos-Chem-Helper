@@ -40,13 +40,9 @@ struct DrPhosButton: View {
 struct DrPhosButton_Previews: PreviewProvider {
     static var previews: some View {
         VStack(spacing: 20) {
-            DrPhosButton(title: "Enter", backgroundColor: AppTheme.enterButtonColor) {
-                print("Enter tapped")
-            }
+            DrPhosButton(title: "Enter", backgroundColor: AppTheme.enterButtonColor) {}
 
-            DrPhosButton(title: "Clear", systemImage: "xmark", backgroundColor: AppTheme.clearButtonColor) {
-                print("Clear tapped")
-            }
+            DrPhosButton(title: "Clear", systemImage: "xmark", backgroundColor: AppTheme.clearButtonColor) {}
         }
         .padding()
         .previewLayout(.sizeThatFits)

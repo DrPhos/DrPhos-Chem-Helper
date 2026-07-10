@@ -42,7 +42,7 @@ enum ToolAccessStatus: Equatable {
     case included
     case purchased
     case fullSuite
-    case development
+    case fullAccess
     case locked
 
     var isUnlocked: Bool { self != .locked }
@@ -52,22 +52,22 @@ struct ToolAccess: Equatable {
     var includedTools: Set<ToolID>
     var purchasedTools: Set<ToolID>
     var hasFullSuite: Bool
-    var grantsDevelopmentAccess: Bool
+    var grantsFullAccess: Bool
 
     init(
         includedTools: Set<ToolID> = [],
         purchasedTools: Set<ToolID> = [],
         hasFullSuite: Bool = false,
-        grantsDevelopmentAccess: Bool = false
+        grantsFullAccess: Bool = false
     ) {
         self.includedTools = includedTools
         self.purchasedTools = purchasedTools
         self.hasFullSuite = hasFullSuite
-        self.grantsDevelopmentAccess = grantsDevelopmentAccess
+        self.grantsFullAccess = grantsFullAccess
     }
 
     func status(for tool: ToolID) -> ToolAccessStatus {
-        if grantsDevelopmentAccess { return .development }
+        if grantsFullAccess { return .fullAccess }
         if hasFullSuite { return .fullSuite }
         if includedTools.contains(tool) { return .included }
         if purchasedTools.contains(tool) { return .purchased }
@@ -78,5 +78,5 @@ struct ToolAccess: Equatable {
         status(for: tool).isUnlocked
     }
 
-    static let developmentUnlocked = ToolAccess(grantsDevelopmentAccess: true)
+    static let fullAccess = ToolAccess(grantsFullAccess: true)
 }

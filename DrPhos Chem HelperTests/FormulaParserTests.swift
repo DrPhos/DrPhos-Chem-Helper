@@ -254,7 +254,7 @@ final class ToolAccessTests: XCTestCase {
         XCTAssertEqual(access.status(for: .balancer), .fullSuite)
     }
 
-    func testDevelopmentConfigurationPreservesCurrentBehavior() {
-        XCTAssertTrue(ToolID.allCases.allSatisfy(ToolAccess.developmentUnlocked.canUse))
+    func testFullAccessConfigurationPreservesCurrentBehavior() {
+        XCTAssertTrue(ToolID.allCases.allSatisfy(ToolAccess.fullAccess.canUse))
     }
 }
