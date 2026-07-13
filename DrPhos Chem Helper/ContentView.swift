@@ -29,7 +29,7 @@ struct ContentView: View {
                                 .accessibilityHidden(true)
 
                             VStack(alignment: .leading) {
-                                Text("Dr. Phos'\nChemistry Helper")
+                                Text("DrPhos'\nChemistry Pro")
                                     .font(.title)
                                     .fontWeight(.bold)
                                     .padding(.leading, 5)
