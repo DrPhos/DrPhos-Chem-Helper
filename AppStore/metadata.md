@@ -50,11 +50,11 @@ Version 4.0 is a substantial modernization of DrPhos' Chemistry Pro:
 
 All chemistry tools are available in this build. No account, network connection, or external hardware is required. The scientific-calculator decimal regression can be verified by entering `.35 × .1`, which should produce `0.0350` with the default precision.
 
-## URLs requiring owner confirmation
+## App Store URLs
 
-- Support URL: TODO
+- Support URL: https://drphos.wordpress.com
 - Marketing URL: Optional
-- Privacy policy URL: TODO
+- Privacy policy URL: https://drphos.wordpress.com/privacy-policy/
 
 ## App Privacy draft
 

@@ -6,7 +6,7 @@ Prepared June 30, 2026.
 
 - Project marketing version set to 4.0.
 - Project build number set to 1.
-- All 24 unit tests passed on iPhone 17 Simulator.
+- All 100 unit tests passed on iPhone 17 Simulator.
 - Signed generic iOS archive succeeded.
 - Archive metadata confirms display name, bundle identifier, version, and build.
 - Embedded privacy manifest validates successfully.
@@ -23,7 +23,8 @@ These temporary artifacts can be recreated from the committed project and should
 
 ## Owner input still required
 
-- Confirm support URL and privacy-policy URL.
+- Support URL confirmed: `https://drphos.wordpress.com`.
+- Privacy-policy URL confirmed: `https://drphos.wordpress.com/privacy-policy/`.
 - Review the marketing copy and screenshots.
 - Complete a human VoiceOver pass and physical-device spot checks.
 - Approve any upload to App Store Connect and the final submission.
