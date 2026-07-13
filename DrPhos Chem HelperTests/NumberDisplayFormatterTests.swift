@@ -20,6 +20,37 @@ final class NumberDisplayFormatterTests: XCTestCase {
         XCTAssertEqual(value, .scientific(mantissa: "3.788", exponent: -6))
     }
 
+    func testLowerThresholdBoundaryUsesScientificWhenSelectedPrecisionWouldDisplayZero() {
+        XCTAssertEqual(
+            NumberDisplayFormatter.format(0.001, using: .chemistry(decimalPlaces: 2)),
+            .scientific(mantissa: "1.00", exponent: -3)
+        )
+    }
+
+    func testAutomaticFormattingNeverRoundsNonzeroValueToDisplayedZero() {
+        XCTAssertEqual(
+            NumberDisplayFormatter.format(0.004, using: .chemistry(decimalPlaces: 2)),
+            .scientific(mantissa: "4.00", exponent: -3)
+        )
+    }
+
+    func testKineticsBoundaryRemainsReadableAtDefaultPrecision() {
+        XCTAssertEqual(
+            NumberDisplayFormatter.format(0.001, using: .kinetics(decimalPlaces: 3)),
+            .decimal("0.001")
+        )
+    }
+
+    func testPHThreeHydroniumDisplayUsesScientificNotation() throws {
+        let hydronium = try PHEngine.fromPH(3).hydronium
+
+        XCTAssertEqual(hydronium, 0.001, accuracy: 1e-15)
+        XCTAssertEqual(
+            NumberDisplayFormatter.format(hydronium, using: .chemistry(decimalPlaces: 2)),
+            .scientific(mantissa: "1.00", exponent: -3)
+        )
+    }
+
     func testFormatsLargeScientificValuesAbove9999() {
         let value = NumberDisplayFormatter.format(
             15_932.33,

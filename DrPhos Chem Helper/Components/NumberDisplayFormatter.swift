@@ -96,6 +96,13 @@ enum NumberDisplayFormatter {
         let absoluteValue = abs(value)
         guard absoluteValue != 0 else { return false }
 
+        // Automatic formatting must never turn a valid nonzero result into a
+        // displayed zero at the selected precision.
+        let zeroRoundingThreshold = 0.5 * pow(10, Double(-clamped(format.decimalPlaces)))
+        if absoluteValue < zeroRoundingThreshold {
+            return true
+        }
+
         if let lowerThreshold = format.scientificLowerThreshold,
            absoluteValue < lowerThreshold {
             return true
