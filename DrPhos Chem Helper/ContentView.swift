@@ -55,6 +55,10 @@ struct ContentView: View {
                                     }) { tool in
                                         SidebarRow(tool: tool, status: toolAccess.status(for: tool))
                                             .tag(tool)
+                                            .accessibilityAddTraits(.isButton)
+                                            .accessibilityAction {
+                                                selectedTool = tool
+                                            }
                                     }
                                 }
                             }
