@@ -130,6 +130,36 @@ final class ChemistryCalculationsTests: XCTestCase {
 }
 
 final class ScientificCalculatorInputTests: XCTestCase {
+    func testClearCancelsPendingOperationBeforeAllClear() {
+        var input = ScientificCalculatorInput()
+        input.enterDigit(1)
+        input.enterDigit(2)
+        input.beginNewNumber()
+
+        let operationMode = ScientificCalculatorClearMode(hasPendingOperation: true)
+        XCTAssertEqual(operationMode, .operation)
+
+        input.clear(for: operationMode)
+        XCTAssertEqual(input.value, "12")
+        XCTAssertTrue(input.startsNewNumber)
+
+        let allClearMode = ScientificCalculatorClearMode(hasPendingOperation: false)
+        XCTAssertEqual(allClearMode, .all)
+
+        input.clear(for: allClearMode)
+        XCTAssertEqual(input, ScientificCalculatorInput())
+    }
+
+    func testOperationClearPreservesCurrentSecondOperandEntry() {
+        var input = ScientificCalculatorInput()
+        input.enterDigit(5)
+
+        input.clear(for: .operation)
+
+        XCTAssertEqual(input.value, "5")
+        XCTAssertFalse(input.startsNewNumber)
+    }
+
     func testDecimalCanBeginEachOperand() {
         var input = ScientificCalculatorInput()
 

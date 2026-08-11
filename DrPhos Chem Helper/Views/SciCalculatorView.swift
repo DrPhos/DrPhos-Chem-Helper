@@ -18,6 +18,10 @@ struct CalculatorView: View {
     @State private var currentOperation: Operation? = nil
     @State private var significantFigures = 3
     @State private var selectedOperation: Operation? = nil
+
+    private var clearMode: ScientificCalculatorClearMode {
+        ScientificCalculatorClearMode(hasPendingOperation: currentOperation != nil)
+    }
     
     enum Operation {
         case add, subtract, multiply, divide
@@ -146,7 +150,7 @@ struct CalculatorView: View {
                     ForEach(row, id: \.self) { button in
                         CalculatorButtonView(button: button, action: {
                             self.tapped(button: button)
-                        }, selectedOperation: selectedOperation)
+                        }, selectedOperation: selectedOperation, clearMode: clearMode)
                     }
                 }
             }
@@ -240,14 +244,19 @@ struct CalculatorView: View {
             displayValueString = convertToDisplayString(input.value)
             
         case .clear:
-            input.clear()
-            displayValueString = "0"
-            currentNumber = 0
-            currentNumberString = "0"
+            let mode = clearMode
+            input.clear(for: mode)
             previousNumber = 0
             previousNumberString = "0"
-            resultString = "0"
             currentOperation = nil
+            selectedOperation = nil
+
+            if mode == .all {
+                displayValueString = "0"
+                currentNumber = 0
+                currentNumberString = "0"
+                resultString = "0"
+            }
             
         case .decimal:
             input.enterDecimal()
@@ -390,8 +399,20 @@ struct CalculatorButtonView: View {
     let button: CalculatorButton
     let action: () -> Void
     let selectedOperation: CalculatorView.Operation?
+    let clearMode: ScientificCalculatorClearMode
     
     var body: some View {
+        Group {
+            if button == .clear {
+                calculatorButton
+                    .accessibilityLabel(clearAccessibilityLabel)
+            } else {
+                calculatorButton
+            }
+        }
+    }
+
+    private var calculatorButton: some View {
         Button(action: action) {
             Text(buttonText)
                 .font(.system(size: 32))
@@ -412,7 +433,7 @@ struct CalculatorButtonView: View {
             case .multiply: return "×"
             case .divide: return "÷"
             }
-        case .clear: return "AC"
+        case .clear: return clearMode == .operation ? "C" : "AC"
         case .plusMinus: return "±"
         case .percent: return "%"
         case .decimal: return "."
@@ -420,6 +441,10 @@ struct CalculatorButtonView: View {
         case .scientificNotation: return "×10˄"
         case .backspace: return "⌫"
         }
+    }
+
+    private var clearAccessibilityLabel: String {
+        clearMode == .operation ? "Clear operation" : "All clear"
     }
     
     private var buttonColor: Color {

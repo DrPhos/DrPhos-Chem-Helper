@@ -69,6 +69,15 @@ struct PHCalculator {
     }
 }
 
+enum ScientificCalculatorClearMode: Equatable {
+    case all
+    case operation
+
+    init(hasPendingOperation: Bool) {
+        self = hasPendingOperation ? .operation : .all
+    }
+}
+
 struct ScientificCalculatorInput: Equatable {
     private(set) var value = "0"
     private(set) var startsNewNumber = true
@@ -138,6 +147,11 @@ struct ScientificCalculatorInput: Equatable {
 
     mutating func clear() {
         self = ScientificCalculatorInput()
+    }
+
+    mutating func clear(for mode: ScientificCalculatorClearMode) {
+        guard mode == .all else { return }
+        clear()
     }
 
     private var currentMantissa: Substring {
