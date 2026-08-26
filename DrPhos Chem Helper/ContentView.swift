@@ -1,8 +1,14 @@
 import SwiftUI
+import StoreKit
 
 struct ContentView: View {
+    @Environment(\.requestReview) private var requestReview
     let toolAccess: ToolAccess
     @State private var selectedTool: ToolID? = UIDevice.current.userInterfaceIdiom == .pad ? .calculator : nil
+    @State private var openedToolsThisSession: Set<ToolID> = []
+    @State private var reviewRequestSequence = 0
+
+    private let reviewRequestPolicy = ReviewRequestPolicy()
 
     init(toolAccess: ToolAccess = .fullAccess) {
         self.toolAccess = toolAccess
@@ -77,11 +83,32 @@ struct ContentView: View {
                     detailView(for: selectedTool)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-            
+
             }
             
         }
-        
+        .onAppear {
+            recordToolOpenIfNeeded(selectedTool)
+        }
+        .onChange(of: selectedTool) { _, newTool in
+            recordToolOpenIfNeeded(newTool)
+        }
+        .task(id: reviewRequestSequence) {
+            guard reviewRequestSequence > 0 else { return }
+
+            do {
+                try await Task.sleep(for: .seconds(2))
+            } catch {
+                return
+            }
+
+            guard reviewRequestPolicy.shouldRequestReview(appVersion: currentAppVersion) else {
+                return
+            }
+
+            reviewRequestPolicy.recordRequestAttempt(appVersion: currentAppVersion)
+            requestReview()
+        }
     }
 
     @ViewBuilder
@@ -111,6 +138,25 @@ struct ContentView: View {
        
         case .none: ContentUnavailableView("Choose a chemistry tool", systemImage: "atom")
         }
+    }
+
+    private func recordToolOpenIfNeeded(_ tool: ToolID?) {
+        guard let tool,
+              tool.isVisibleInNavigation,
+              toolAccess.canUse(tool),
+              openedToolsThisSession.insert(tool).inserted else {
+            return
+        }
+
+        reviewRequestPolicy.recordToolOpen(toolID: tool.id)
+        if reviewRequestPolicy.shouldRequestReview(appVersion: currentAppVersion) {
+            reviewRequestSequence += 1
+        }
+    }
+
+    private var currentAppVersion: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
+            ?? "unknown"
     }
 }
 

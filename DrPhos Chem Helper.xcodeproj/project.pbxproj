@@ -56,6 +56,8 @@
 		A20000C12F00000100000001 /* SolutionsEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000C22F00000100000001 /* SolutionsEngineTests.swift */; };
 		A20000D12F00000100000001 /* PHEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000D22F00000100000001 /* PHEngine.swift */; };
 		A20000E12F00000100000001 /* PHEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000E22F00000100000001 /* PHEngineTests.swift */; };
+		A30000112F00000100000001 /* ReviewRequestPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000122F00000100000001 /* ReviewRequestPolicy.swift */; };
+		A30000212F00000100000001 /* ReviewRequestPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000222F00000100000001 /* ReviewRequestPolicyTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -119,6 +121,8 @@
 		A20000C22F00000100000001 /* SolutionsEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolutionsEngineTests.swift; sourceTree = "<group>"; };
 		A20000D22F00000100000001 /* PHEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PHEngine.swift; sourceTree = "<group>"; };
 		A20000E22F00000100000001 /* PHEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PHEngineTests.swift; sourceTree = "<group>"; };
+		A30000122F00000100000001 /* ReviewRequestPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewRequestPolicy.swift; sourceTree = "<group>"; };
+		A30000222F00000100000001 /* ReviewRequestPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewRequestPolicyTests.swift; sourceTree = "<group>"; };
 		A10000042F00000100000001 /* DrPhos Chem HelperTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "DrPhos Chem HelperTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -163,6 +167,7 @@
 				A20000922F00000100000001 /* NumberDisplayFormatter.swift */,
 				A20000D22F00000100000001 /* PHEngine.swift */,
 				A20000122F00000100000001 /* ReactionBalancingEngine.swift */,
+				A30000122F00000100000001 /* ReviewRequestPolicy.swift */,
 				A20000B22F00000100000001 /* SolutionsEngine.swift */,
 				A20000222F00000100000001 /* StoichiometryEngine.swift */,
 				A10000222F00000100000001 /* ToolAccess.swift */,
@@ -240,6 +245,7 @@
 				A20000822F00000100000001 /* KineticsEngineTests.swift */,
 				A20000A22F00000100000001 /* NumberDisplayFormatterTests.swift */,
 				A20000E22F00000100000001 /* PHEngineTests.swift */,
+				A30000222F00000100000001 /* ReviewRequestPolicyTests.swift */,
 				A20000C22F00000100000001 /* SolutionsEngineTests.swift */,
 			);
 			path = "DrPhos Chem HelperTests";
@@ -351,6 +357,7 @@
 				A20000B12F00000100000001 /* SolutionsEngine.swift in Sources */,
 				A20000D12F00000100000001 /* PHEngine.swift in Sources */,
 				A20000112F00000100000001 /* ReactionBalancingEngine.swift in Sources */,
+				A30000112F00000100000001 /* ReviewRequestPolicy.swift in Sources */,
 				A20000212F00000100000001 /* StoichiometryEngine.swift in Sources */,
 				A20000312F00000100000001 /* CombinedReactionView.swift in Sources */,
 				A20000412F00000100000001 /* ChemicalFormulaFormatter.swift in Sources */,
@@ -398,6 +405,7 @@
 				A20000812F00000100000001 /* KineticsEngineTests.swift in Sources */,
 				A20000A12F00000100000001 /* NumberDisplayFormatterTests.swift in Sources */,
 				A20000E12F00000100000001 /* PHEngineTests.swift in Sources */,
+				A30000212F00000100000001 /* ReviewRequestPolicyTests.swift in Sources */,
 				A20000C12F00000100000001 /* SolutionsEngineTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -555,7 +563,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 4.0.1;
+				MARKETING_VERSION = 4.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "drphos.DrPhos-GenChem-Helper";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -585,7 +593,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 4.0.1;
+				MARKETING_VERSION = 4.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "drphos.DrPhos-GenChem-Helper";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
