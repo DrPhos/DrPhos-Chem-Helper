@@ -18,9 +18,20 @@ struct CalculatorView: View {
     @State private var currentOperation: Operation? = nil
     @State private var significantFigures = 3
     @State private var selectedOperation: Operation? = nil
+    @State private var lastResult: Double? = nil
 
     private var clearMode: ScientificCalculatorClearMode {
         ScientificCalculatorClearMode(hasPendingOperation: currentOperation != nil)
+    }
+
+    private var primaryDisplay: String {
+        if input.value == "Error" {
+            return "Error"
+        }
+        if let lastResult {
+            return ScientificCalculatorPrimaryDisplayFormatter.format(lastResult)
+        }
+        return convertToDisplayString(input.value)
     }
     
     enum Operation {
@@ -53,8 +64,9 @@ struct CalculatorView: View {
                 VStack(alignment: .center, spacing: 4) {
                     
                     VStack(alignment: .center){
-                        Text(input.value)
+                        Text(primaryDisplay)
                             .font(.system(size: 64))
+                            .monospacedDigit()
                             .foregroundColor(.white)
                             .lineLimit(1)
                             .minimumScaleFactor(0.5)
@@ -77,7 +89,12 @@ struct CalculatorView: View {
                             .font(.system(size: 20))
                             .foregroundColor(.gray)
                             .underline()
-                        Text(convertToNormalForm(input.value))
+                        Text(
+                            ScientificCalculatorPrimaryDisplayFormatter.normal(
+                                input.value,
+                                significantFigures: significantFigures
+                            )
+                        )
                             .font(.system(size: 24))
                             .foregroundColor(.gray)
                     }
@@ -96,7 +113,12 @@ struct CalculatorView: View {
                             .font(.system(size: 20))
                             .foregroundColor(.gray)
                             .underline()
-                        Text(formatToScientificNotation(input.value))
+                        Text(
+                            ScientificCalculatorPrimaryDisplayFormatter.scientific(
+                                input.value,
+                                significantFigures: significantFigures
+                            )
+                        )
                             .font(.system(size: 24))
                             .foregroundColor(.gray)
                     }
@@ -166,40 +188,6 @@ struct CalculatorView: View {
         
     }
     
-    private func roundToSignificantFigures(_ value: Double, sigFigs: Int) -> String {
-        guard value != 0 else { return "0" }
-        let log10 = floor(log10(abs(value)))
-        let scale = pow(10, Double(sigFigs) - 1 - log10)
-        let rounded = (value * scale).rounded() / scale
-
-        // Format to show trailing zeros if needed
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.usesSignificantDigits = true
-        formatter.maximumSignificantDigits = sigFigs
-        formatter.minimumSignificantDigits = sigFigs
-        return formatter.string(from: NSNumber(value: rounded)) ?? "\(rounded)"
-    }
-
-    private func convertToNormalForm(_ value: String) -> String {
-        if let number = Double(value) {
-            return roundToSignificantFigures(number, sigFigs: significantFigures)
-        }
-        return value
-    }
-
-    private func formatToScientificNotation(_ value: String) -> String {
-        if let number = Double(value) {
-            let formatter = NumberFormatter()
-            formatter.numberStyle = .scientific
-            formatter.maximumSignificantDigits = significantFigures
-            formatter.minimumSignificantDigits = significantFigures
-            formatter.exponentSymbol = "e"
-            return convertToDisplayString(formatter.string(from: NSNumber(value: number)) ?? "\(number)")
-        }
-        return value
-    }
-    
     private let superscriptDigits: [String] = ["⁰", "¹", "²", "³", "⁴", "⁵", "⁶", "⁷", "⁸", "⁹"]
 
     private func convertExponentToSuperscript(_ exponent: String) -> String {
@@ -241,6 +229,7 @@ struct CalculatorView: View {
             
         case .digit(let number):
             input.enterDigit(number)
+            lastResult = nil
             displayValueString = convertToDisplayString(input.value)
             
         case .clear:
@@ -252,6 +241,7 @@ struct CalculatorView: View {
             selectedOperation = nil
 
             if mode == .all {
+                lastResult = nil
                 displayValueString = "0"
                 currentNumber = 0
                 currentNumberString = "0"
@@ -260,16 +250,23 @@ struct CalculatorView: View {
             
         case .decimal:
             input.enterDecimal()
+            lastResult = nil
             displayValueString = input.value
             
         case .plusMinus:
             input.toggleSign()
+            if let result = lastResult, input.startsNewNumber {
+                lastResult = -result
+            } else {
+                lastResult = nil
+            }
             displayValueString = convertToDisplayString(input.value)
             
         case .percent:
             if var number = Double(input.value) {
                 number /= 100
                 input.replaceValue(with: formatNumber(number))
+                lastResult = nil
                 displayValueString = convertToDisplayString(input.value)
             }
             
@@ -296,15 +293,23 @@ struct CalculatorView: View {
             
         case .backspace:
             input.backspace()
+            lastResult = nil
             displayValueString = convertToDisplayString(input.value)
         }
     }
     
     private func calculate() {
         if let operation = currentOperation {
-            let currentVal = (input.value.contains("e")) ?
-                Double(input.value.replacingOccurrences(of: "e", with: "E")) ?? 0 :
-                Double(input.value) ?? 0
+            let normalizedValue = input.value.replacingOccurrences(of: "e", with: "E")
+            guard let currentVal = Double(normalizedValue), currentVal.isFinite else {
+                showCalculationError()
+                return
+            }
+
+            if case .divide = operation, currentVal == 0 {
+                showCalculationError()
+                return
+            }
             
             currentNumberString = input.value
                 
@@ -320,6 +325,11 @@ struct CalculatorView: View {
             case .divide:
                 result = previousNumber / currentVal
             }
+
+            guard result.isFinite else {
+                showCalculationError()
+                return
+            }
             
             if abs(result) > 1e10 || (abs(result) < 1e-10 && result != 0) {
                 let scientificFormat = String(format: "%.2e", result)
@@ -330,10 +340,20 @@ struct CalculatorView: View {
             
             displayValueString = convertToDisplayString(input.value)
             resultString = input.value
+            lastResult = result
             
             currentOperation = nil
             selectedOperation = nil
         }
+    }
+
+    private func showCalculationError() {
+        input.replaceValue(with: "Error", startsNewNumber: true)
+        displayValueString = "Error"
+        resultString = "Error"
+        lastResult = nil
+        currentOperation = nil
+        selectedOperation = nil
     }
     
     private func formatNumber(_ number: Double) -> String {

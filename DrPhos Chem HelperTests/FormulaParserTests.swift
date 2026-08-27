@@ -197,6 +197,87 @@ final class ScientificCalculatorInputTests: XCTestCase {
 
         XCTAssertEqual(input.value, "1.2e3")
     }
+
+    func testPrimaryResultFormattingIsIndependentOfSignificantFigures() {
+        let result = 0.35 * 0.1
+        let storedResult = String(result)
+
+        XCTAssertEqual(
+            ScientificCalculatorPrimaryDisplayFormatter.format(result),
+            "0.035"
+        )
+        XCTAssertEqual(
+            ScientificCalculatorPrimaryDisplayFormatter.normal(
+                storedResult,
+                significantFigures: 3
+            ),
+            "0.0350"
+        )
+        XCTAssertEqual(
+            ScientificCalculatorPrimaryDisplayFormatter.scientific(
+                storedResult,
+                significantFigures: 3
+            ),
+            "3.50×10⁻²"
+        )
+
+        XCTAssertEqual(ScientificCalculatorPrimaryDisplayFormatter.format(result), "0.035")
+        XCTAssertEqual(
+            ScientificCalculatorPrimaryDisplayFormatter.normal(
+                storedResult,
+                significantFigures: 4
+            ),
+            "0.03500"
+        )
+        XCTAssertEqual(
+            ScientificCalculatorPrimaryDisplayFormatter.scientific(
+                storedResult,
+                significantFigures: 4
+            ),
+            "3.500×10⁻²"
+        )
+    }
+
+    func testPrimaryResultKeepsUsefulPrecisionWithinTwelveCharacters() {
+        let result = ScientificCalculatorPrimaryDisplayFormatter.format(2.0 / 3.0)
+
+        XCTAssertEqual(result, "0.6666666667")
+        XCTAssertLessThanOrEqual(
+            result.count,
+            ScientificCalculatorPrimaryDisplayFormatter.characterLimit
+        )
+        XCTAssertEqual(
+            ScientificCalculatorPrimaryDisplayFormatter.normal(
+                String(2.0 / 3.0),
+                significantFigures: 3
+            ),
+            "0.667"
+        )
+        XCTAssertEqual(
+            ScientificCalculatorPrimaryDisplayFormatter.scientific(
+                String(2.0 / 3.0),
+                significantFigures: 3
+            ),
+            "6.67×10⁻¹"
+        )
+    }
+
+    func testPrimaryResultUsesScientificNotationWhenNeeded() {
+        let large = ScientificCalculatorPrimaryDisplayFormatter.format(1.23456789012345e20)
+        let small = ScientificCalculatorPrimaryDisplayFormatter.format(1.23456789012345e-20)
+
+        XCTAssertEqual(large, "1.23457×10²⁰")
+        XCTAssertEqual(small, "1.2346×10⁻²⁰")
+        XCTAssertLessThanOrEqual(large.count, 12)
+        XCTAssertLessThanOrEqual(small.count, 12)
+    }
+
+    func testPrimaryResultHandlesNegativeZeroAndInvalidValues() {
+        XCTAssertEqual(ScientificCalculatorPrimaryDisplayFormatter.format(-0.035), "-0.035")
+        XCTAssertEqual(ScientificCalculatorPrimaryDisplayFormatter.format(0), "0")
+        XCTAssertEqual(ScientificCalculatorPrimaryDisplayFormatter.format(.infinity), "Error")
+        XCTAssertEqual(ScientificCalculatorPrimaryDisplayFormatter.format(.nan), "Error")
+    }
 }
 
 final class NumericInputEditorTests: XCTestCase {

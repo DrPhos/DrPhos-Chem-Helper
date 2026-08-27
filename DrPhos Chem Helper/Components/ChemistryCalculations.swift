@@ -158,3 +158,111 @@ struct ScientificCalculatorInput: Equatable {
         value.split(separator: "e", omittingEmptySubsequences: false)[0]
     }
 }
+
+enum ScientificCalculatorPrimaryDisplayFormatter {
+    private static let locale = Locale(identifier: "en_US_POSIX")
+    static let characterLimit = 12
+
+    static func format(
+        _ value: Double,
+        characterLimit: Int = characterLimit
+    ) -> String {
+        guard value.isFinite else { return "Error" }
+
+        if let decimal = fittedResult(
+            value,
+            style: .decimal,
+            characterLimit: characterLimit
+        ) {
+            return decimal
+        }
+
+        return fittedResult(
+            value,
+            style: .scientific,
+            characterLimit: characterLimit
+        ) ?? "Error"
+    }
+
+    static func normal(_ value: String, significantFigures: Int) -> String {
+        guard let number = Double(value) else { return value }
+        guard number != 0 else { return "0" }
+
+        let magnitude = floor(log10(abs(number)))
+        let scale = pow(10, Double(significantFigures) - 1 - magnitude)
+        let rounded = (number * scale).rounded() / scale
+
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.usesSignificantDigits = true
+        formatter.maximumSignificantDigits = significantFigures
+        formatter.minimumSignificantDigits = significantFigures
+        return formatter.string(from: NSNumber(value: rounded)) ?? String(rounded)
+    }
+
+    static func scientific(_ value: String, significantFigures: Int) -> String {
+        guard let number = Double(value) else { return value }
+
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .scientific
+        formatter.maximumSignificantDigits = significantFigures
+        formatter.minimumSignificantDigits = significantFigures
+        formatter.exponentSymbol = "e"
+
+        guard let formatted = formatter.string(from: NSNumber(value: number)) else {
+            return String(number)
+        }
+        return scientificDisplayString(formatted)
+    }
+
+    private static func fittedResult(
+        _ value: Double,
+        style: NumberFormatter.Style,
+        characterLimit: Int
+    ) -> String? {
+        guard characterLimit > 0 else { return nil }
+
+        for significantDigits in stride(from: 15, through: 1, by: -1) {
+            let formatter = NumberFormatter()
+            formatter.locale = locale
+            formatter.numberStyle = style
+            formatter.usesGroupingSeparator = false
+            formatter.usesSignificantDigits = true
+            formatter.maximumSignificantDigits = significantDigits
+            formatter.minimumSignificantDigits = 1
+            formatter.maximumFractionDigits = 340
+            formatter.exponentSymbol = "e"
+
+            guard let formatted = formatter.string(from: NSNumber(value: value)) else {
+                continue
+            }
+
+            let candidate = style == .scientific
+                ? scientificDisplayString(formatted)
+                : formatted
+
+            if candidate.count <= characterLimit {
+                return candidate
+            }
+        }
+
+        return nil
+    }
+
+    private static func scientificDisplayString(_ value: String) -> String {
+        let parts = value.components(separatedBy: "e")
+        guard parts.count == 2 else { return value }
+
+        let exponent = Int(parts[1]).map(String.init) ?? parts[1]
+        return parts[0] + "×10" + superscript(exponent)
+    }
+
+    private static func superscript(_ exponent: String) -> String {
+        let characters: [Character: Character] = [
+            "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴",
+            "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹",
+            "-": "⁻", "+": "+"
+        ]
+        return String(exponent.compactMap { characters[$0] })
+    }
+}
