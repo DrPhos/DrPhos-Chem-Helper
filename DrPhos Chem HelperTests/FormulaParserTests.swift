@@ -278,6 +278,120 @@ final class ScientificCalculatorInputTests: XCTestCase {
         XCTAssertEqual(ScientificCalculatorPrimaryDisplayFormatter.format(.infinity), "Error")
         XCTAssertEqual(ScientificCalculatorPrimaryDisplayFormatter.format(.nan), "Error")
     }
+
+    func testChainedCalculationCarriesExactIntermediateAcrossSignificantFigures() {
+        let expected = 2678.0 / 2.54 / 12.0
+
+        for significantFigures in [1, 3, 4, 10] {
+            let result = chainedDivisionResult()
+
+            XCTAssertEqual(
+                result,
+                expected,
+                accuracy: 1e-12,
+                "Chained result changed at \(significantFigures) significant figures"
+            )
+            XCTAssertEqual(
+                ScientificCalculatorPrimaryDisplayFormatter.format(result),
+                "87.860892388"
+            )
+
+            _ = ScientificCalculatorPrimaryDisplayFormatter.normal(
+                result,
+                significantFigures: significantFigures
+            )
+            _ = ScientificCalculatorPrimaryDisplayFormatter.scientific(
+                result,
+                significantFigures: significantFigures
+            )
+        }
+
+        XCTAssertEqual(
+            ScientificCalculatorPrimaryDisplayFormatter.normal(expected, significantFigures: 3),
+            "87.9"
+        )
+        XCTAssertEqual(
+            ScientificCalculatorPrimaryDisplayFormatter.scientific(expected, significantFigures: 3),
+            "8.79×10¹"
+        )
+    }
+
+    func testFollowUpCalculationUsesExactResultInsteadOfRenderedEntry() {
+        let expected = 2678.0 / 2.54 / 12.0
+
+        for significantFigures in [1, 3, 4, 10] {
+            let result = followUpDivisionResult(significantFigures: significantFigures)
+
+            XCTAssertEqual(
+                result,
+                expected,
+                accuracy: 1e-12,
+                "Follow-up result changed at \(significantFigures) significant figures"
+            )
+            XCTAssertEqual(
+                ScientificCalculatorPrimaryDisplayFormatter.format(result),
+                "87.860892388"
+            )
+        }
+    }
+
+    private func chainedDivisionResult() -> Double {
+        var input = calculatorInput("2678")
+        var exactResult = ScientificCalculatorExactResult()
+        var previousNumber = exactResult.operationOperand(for: input)!
+
+        input.beginNewNumber()
+        input = calculatorInput("2.54")
+        let intermediate = previousNumber / input.completeNumber!
+        exactResult.record(intermediate)
+
+        // Selecting another operator after the pending calculation must carry
+        // the exact result rather than reparsing any rendered entry string.
+        input.replaceValue(with: "1,050", startsNewNumber: true)
+        previousNumber = exactResult.operationOperand(for: input)!
+
+        input.beginNewNumber()
+        input = calculatorInput("12")
+        let result = previousNumber / input.completeNumber!
+        exactResult.record(result)
+        return exactResult.value!
+    }
+
+    private func followUpDivisionResult(significantFigures: Int) -> Double {
+        var input = calculatorInput("2678")
+        var exactResult = ScientificCalculatorExactResult()
+        let firstOperand = exactResult.operationOperand(for: input)!
+
+        input.beginNewNumber()
+        input = calculatorInput("2.54")
+        let intermediate = firstOperand / input.completeNumber!
+        exactResult.record(intermediate)
+
+        // Exercise both formatted displays before the follow-up operation.
+        // Neither is allowed to become the next mathematical operand.
+        _ = ScientificCalculatorPrimaryDisplayFormatter.normal(
+            intermediate,
+            significantFigures: significantFigures
+        )
+        _ = ScientificCalculatorPrimaryDisplayFormatter.scientific(
+            intermediate,
+            significantFigures: significantFigures
+        )
+        input.replaceValue(with: "1.05e3", startsNewNumber: true)
+
+        let followUpOperand = exactResult.operationOperand(for: input)!
+        input.beginNewNumber()
+        input = calculatorInput("12")
+        let result = followUpOperand / input.completeNumber!
+        exactResult.record(result)
+        return exactResult.value!
+    }
+
+    private func calculatorInput(_ value: String) -> ScientificCalculatorInput {
+        var input = ScientificCalculatorInput()
+        input.replaceValue(with: value)
+        return input
+    }
 }
 
 final class NumericInputEditorTests: XCTestCase {

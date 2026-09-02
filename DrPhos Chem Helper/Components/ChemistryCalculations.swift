@@ -157,6 +157,51 @@ struct ScientificCalculatorInput: Equatable {
     private var currentMantissa: Substring {
         value.split(separator: "e", omittingEmptySubsequences: false)[0]
     }
+
+    var completeNumber: Double? {
+        let components = value.split(separator: "e", omittingEmptySubsequences: false)
+        guard components.count <= 2,
+              let mantissa = components.first,
+              !mantissa.isEmpty,
+              mantissa != "-",
+              mantissa != ".",
+              mantissa != "-." else {
+            return nil
+        }
+
+        if components.count == 2 {
+            let exponent = components[1]
+            guard !exponent.isEmpty, exponent != "-", exponent != "+" else {
+                return nil
+            }
+        }
+
+        guard let number = Double(value), number.isFinite else { return nil }
+        return number
+    }
+}
+
+struct ScientificCalculatorExactResult: Equatable {
+    private(set) var value: Double?
+
+    func displayNumber(for input: ScientificCalculatorInput) -> Double? {
+        value ?? input.completeNumber
+    }
+
+    func operationOperand(for input: ScientificCalculatorInput) -> Double? {
+        if input.startsNewNumber, let value {
+            return value
+        }
+        return input.completeNumber
+    }
+
+    mutating func record(_ result: Double) {
+        value = result.isFinite ? result : nil
+    }
+
+    mutating func clear() {
+        value = nil
+    }
 }
 
 enum ScientificCalculatorPrimaryDisplayFormatter {
@@ -186,6 +231,10 @@ enum ScientificCalculatorPrimaryDisplayFormatter {
 
     static func normal(_ value: String, significantFigures: Int) -> String {
         guard let number = Double(value) else { return value }
+        return normal(number, significantFigures: significantFigures)
+    }
+
+    static func normal(_ number: Double, significantFigures: Int) -> String {
         guard number != 0 else { return "0" }
 
         let magnitude = floor(log10(abs(number)))
@@ -202,6 +251,10 @@ enum ScientificCalculatorPrimaryDisplayFormatter {
 
     static func scientific(_ value: String, significantFigures: Int) -> String {
         guard let number = Double(value) else { return value }
+        return scientific(number, significantFigures: significantFigures)
+    }
+
+    static func scientific(_ number: Double, significantFigures: Int) -> String {
 
         let formatter = NumberFormatter()
         formatter.numberStyle = .scientific

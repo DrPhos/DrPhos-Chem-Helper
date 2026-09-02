@@ -18,7 +18,7 @@ struct CalculatorView: View {
     @State private var currentOperation: Operation? = nil
     @State private var significantFigures = 3
     @State private var selectedOperation: Operation? = nil
-    @State private var lastResult: Double? = nil
+    @State private var exactResult = ScientificCalculatorExactResult()
 
     private var clearMode: ScientificCalculatorClearMode {
         ScientificCalculatorClearMode(hasPendingOperation: currentOperation != nil)
@@ -28,10 +28,14 @@ struct CalculatorView: View {
         if input.value == "Error" {
             return "Error"
         }
-        if let lastResult {
-            return ScientificCalculatorPrimaryDisplayFormatter.format(lastResult)
+        if let result = exactResult.value {
+            return ScientificCalculatorPrimaryDisplayFormatter.format(result)
         }
         return convertToDisplayString(input.value)
+    }
+
+    private var secondaryDisplayNumber: Double? {
+        exactResult.displayNumber(for: input)
     }
     
     enum Operation {
@@ -90,10 +94,12 @@ struct CalculatorView: View {
                             .foregroundColor(.gray)
                             .underline()
                         Text(
-                            ScientificCalculatorPrimaryDisplayFormatter.normal(
-                                input.value,
-                                significantFigures: significantFigures
-                            )
+                            secondaryDisplayNumber.map {
+                                ScientificCalculatorPrimaryDisplayFormatter.normal(
+                                    $0,
+                                    significantFigures: significantFigures
+                                )
+                            } ?? input.value
                         )
                             .font(.system(size: 24))
                             .foregroundColor(.gray)
@@ -114,10 +120,12 @@ struct CalculatorView: View {
                             .foregroundColor(.gray)
                             .underline()
                         Text(
-                            ScientificCalculatorPrimaryDisplayFormatter.scientific(
-                                input.value,
-                                significantFigures: significantFigures
-                            )
+                            secondaryDisplayNumber.map {
+                                ScientificCalculatorPrimaryDisplayFormatter.scientific(
+                                    $0,
+                                    significantFigures: significantFigures
+                                )
+                            } ?? convertToDisplayString(input.value)
                         )
                             .font(.system(size: 24))
                             .foregroundColor(.gray)
@@ -229,7 +237,7 @@ struct CalculatorView: View {
             
         case .digit(let number):
             input.enterDigit(number)
-            lastResult = nil
+            exactResult.clear()
             displayValueString = convertToDisplayString(input.value)
             
         case .clear:
@@ -241,7 +249,7 @@ struct CalculatorView: View {
             selectedOperation = nil
 
             if mode == .all {
-                lastResult = nil
+                exactResult.clear()
                 displayValueString = "0"
                 currentNumber = 0
                 currentNumberString = "0"
@@ -250,15 +258,15 @@ struct CalculatorView: View {
             
         case .decimal:
             input.enterDecimal()
-            lastResult = nil
+            exactResult.clear()
             displayValueString = input.value
             
         case .plusMinus:
             input.toggleSign()
-            if let result = lastResult, input.startsNewNumber {
-                lastResult = -result
+            if let result = exactResult.value, input.startsNewNumber {
+                exactResult.record(-result)
             } else {
-                lastResult = nil
+                exactResult.clear()
             }
             displayValueString = convertToDisplayString(input.value)
             
@@ -266,19 +274,18 @@ struct CalculatorView: View {
             if var number = Double(input.value) {
                 number /= 100
                 input.replaceValue(with: formatNumber(number))
-                lastResult = nil
+                exactResult.clear()
                 displayValueString = convertToDisplayString(input.value)
             }
             
         case .operation(let operation):
-            if let number = (input.value.contains("e") || input.value.contains("E")) ?
-                Double(input.value.replacingOccurrences(of: "e", with: "E")) :
-                Double(input.value) {
+            if let number = exactResult.operationOperand(for: input) {
                 if currentOperation != nil && !input.startsNewNumber {
                     // Only calculate if we've started entering a new number
                     calculate()
-                    previousNumber = Double(input.value.replacingOccurrences(of: "e", with: "E")) ?? 0
-                    previousNumberString = input.value
+                    guard let calculatedResult = exactResult.value else { return }
+                    previousNumber = calculatedResult
+                    previousNumberString = String(calculatedResult)
                 } else {
                     previousNumber = number
                     previousNumberString = input.value
@@ -293,7 +300,7 @@ struct CalculatorView: View {
             
         case .backspace:
             input.backspace()
-            lastResult = nil
+            exactResult.clear()
             displayValueString = convertToDisplayString(input.value)
         }
     }
@@ -340,7 +347,7 @@ struct CalculatorView: View {
             
             displayValueString = convertToDisplayString(input.value)
             resultString = input.value
-            lastResult = result
+            exactResult.record(result)
             
             currentOperation = nil
             selectedOperation = nil
@@ -351,7 +358,7 @@ struct CalculatorView: View {
         input.replaceValue(with: "Error", startsNewNumber: true)
         displayValueString = "Error"
         resultString = "Error"
-        lastResult = nil
+        exactResult.clear()
         currentOperation = nil
         selectedOperation = nil
     }
